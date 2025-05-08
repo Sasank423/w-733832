@@ -25,7 +25,7 @@ import {
   AlignLeft, 
   AlignCenter, 
   AlignRight,
-  SliderHorizontal,
+  SlidersHorizontal,
   FileImage
 } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
