@@ -1,0 +1,89 @@
+
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+interface FeaturedMemeProps {
+  meme: {
+    id: string;
+    title: string;
+    imageUrl: string;
+    description: string;
+    creator: {
+      id: string;
+      username: string;
+      avatar?: string;
+    };
+    voteCount: number;
+    isMemeOfTheDay?: boolean;
+  };
+}
+
+const FeaturedMeme = ({ meme }: FeaturedMemeProps) => {
+  return (
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-brand-purple/10 to-brand-orange/10 p-1">
+      <div className="absolute top-4 right-4 z-10">
+        <span className="badge badge-primary">
+          {meme.isMemeOfTheDay ? 'Meme of the Day' : 'Weekly Champion'}
+        </span>
+      </div>
+      
+      <div className="flex flex-col md:flex-row rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+        <div className="relative md:w-2/3 w-full">
+          <Link to={`/meme/${meme.id}`}>
+            <img 
+              src={meme.imageUrl} 
+              alt={meme.title}
+              className="w-full h-64 md:h-full object-cover"
+            />
+          </Link>
+        </div>
+        
+        <div className="md:w-1/3 w-full p-6 flex flex-col justify-between">
+          <div>
+            <Link to={`/meme/${meme.id}`}>
+              <h2 className="text-2xl font-bold mb-2 hover:text-brand-purple transition-colors">
+                {meme.title}
+              </h2>
+            </Link>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {meme.description}
+            </p>
+          </div>
+          
+          <div>
+            <div className="flex items-center mb-4">
+              <Avatar className="h-8 w-8 mr-2">
+                <AvatarImage src={meme.creator.avatar} />
+                <AvatarFallback className="bg-brand-purple text-white">
+                  {meme.creator.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <Link to={`/user/${meme.creator.id}`} className="text-sm font-medium hover:text-brand-purple">
+                  {meme.creator.username}
+                </Link>
+                <p className="text-xs text-gray-500">{meme.voteCount} votes</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <Button asChild>
+                <Link to={`/meme/${meme.id}`}>View Meme</Link>
+              </Button>
+              
+              <Button variant="ghost" size="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 19V5M5 12l7-7 7 7" />
+                </svg>
+                <span className="sr-only">Upvote</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FeaturedMeme;
