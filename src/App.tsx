@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import ProfileSettings from "./pages/ProfileSettings";
 import NotFound from "./pages/NotFound";
+import MemeCreationStudio from "./pages/MemeCreationStudio";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/create" element={<MemeCreationStudio />} />
             <Route path="/settings" element={<ProfileSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
