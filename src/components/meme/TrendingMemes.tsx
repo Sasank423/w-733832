@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { MessageSquare, Heart } from 'lucide-react';
+import { MessageSquare, Heart, TrendingUp } from 'lucide-react';
 
 // Mock data for trending memes
 const MOCK_TRENDING_MEMES = {
@@ -140,7 +140,10 @@ const TrendingMemes = () => {
   return (
     <div className="trending-memes">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Trending</h2>
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <TrendingUp className="h-5 w-5" />
+          <span>Trending</span>
+        </h2>
         <Link to="/trending" className="text-brand-purple hover:underline text-sm">
           View All
         </Link>
@@ -200,7 +203,7 @@ interface TrendingMemeCardProps {
 
 const TrendingMemeCard = ({ meme, rank }: TrendingMemeCardProps) => {
   return (
-    <Card className="overflow-hidden hover-scale">
+    <Card className="overflow-hidden hover:shadow-md transition-all duration-300 hover:-translate-y-1">
       <div className="relative">
         <Link to={`/meme/${meme.id}`}>
           <img 
@@ -224,7 +227,7 @@ const TrendingMemeCard = ({ meme, rank }: TrendingMemeCardProps) => {
         </CardTitle>
         <CardDescription className="flex items-center text-xs space-x-1">
           <Avatar className="h-4 w-4 mr-1">
-            <AvatarImage src={meme.creator.avatar} />
+            <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${meme.creator.username}`} />
             <AvatarFallback className="text-[8px]">
               {meme.creator.username.charAt(0).toUpperCase()}
             </AvatarFallback>
