@@ -110,10 +110,17 @@ const TemplateGallery = ({ onTemplateSelect }: TemplateGalleryProps) => {
                 <button
                   key={template.id}
                   onClick={() => onTemplateSelect(template.imageUrl)}
-                  className="rounded-lg overflow-hidden border hover:shadow-lg transition-shadow"
+                  className="rounded-lg overflow-hidden border hover:border-primary hover:shadow-md transition-all duration-200 bg-card flex flex-col"
                 >
-                  <img src={template.imageUrl} alt={template.name} className="w-full h-32 object-cover" />
-                  <div className="p-2 text-xs text-center font-medium">
+                  <div className="relative w-full h-36 overflow-hidden bg-muted/30">
+                    <img 
+                      src={template.imageUrl} 
+                      alt={template.name} 
+                      className="w-full h-full object-contain hover:scale-105 transition-transform duration-200" 
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-2 text-xs text-center font-medium truncate w-full bg-muted/10 border-t">
                     {template.name}
                   </div>
                 </button>

@@ -151,7 +151,7 @@ export const StudioLayout = ({
       </div>
 
       {/* Center: Live preview */}
-      <div className="col-span-6">
+      <div className="col-span-5">
         <div className="bg-muted p-4 rounded-lg">
           <h2 className="text-lg font-medium mb-4">Preview</h2>
           
@@ -193,7 +193,7 @@ export const StudioLayout = ({
       </div>
 
       {/* Right panel: Template gallery */}
-      <div className="col-span-3">
+      <div className="col-span-4">
         <TemplateGallery 
           onTemplateSelect={(imageUrl) => {
             if (meme.imageUrls) {
