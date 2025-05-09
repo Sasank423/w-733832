@@ -7,6 +7,7 @@ import { Menu, Search, Bell } from "lucide-react";
 import UserMenu from "@/components/user/UserMenu";
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/auth/AuthModal';
+import NotificationCenter from '@/components/user/NotificationCenter';
 
 const Navbar = () => {
   const { user, isAuthenticated } = useAuth();
@@ -53,10 +54,7 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/create">Create</Link>
                 </Button>
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
-                </Button>
+                <NotificationCenter />
                 <UserMenu user={user} />
               </>
             ) : (
@@ -102,8 +100,8 @@ const Navbar = () => {
                 <Link to="/notifications" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
                   Notifications
                 </Link>
-                <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
-                  Profile
+                <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+                  Dashboard
                 </Link>
                 <Link to="/settings" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
                   Settings

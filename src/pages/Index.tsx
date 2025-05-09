@@ -4,7 +4,9 @@ import Layout from '@/components/layout/Layout';
 import FeedFilters, { FeedType } from '@/components/meme/FeedFilters';
 import MemeCard from '@/components/meme/MemeCard';
 import FeaturedMeme from '@/components/meme/FeaturedMeme';
+import TrendingMemes from '@/components/meme/TrendingMemes';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 // Mock data - In a real app, this would come from an API
 const MOCK_MEME_OF_THE_DAY = {
@@ -32,6 +34,10 @@ const MOCK_MEMES = [
       id: 'user2',
       username: 'NightCoder',
     },
+    stats: {
+      views: 1872,
+      comments: 42,
+    }
   },
   {
     id: 'meme3',
@@ -44,6 +50,11 @@ const MOCK_MEMES = [
       username: 'CoffeeAddict',
     },
     isFeatured: true,
+    isWeeklyChampion: true,
+    stats: {
+      views: 2453,
+      comments: 57,
+    }
   },
   {
     id: 'meme4',
@@ -55,6 +66,10 @@ const MOCK_MEMES = [
       id: 'user4',
       username: 'BugHunter',
     },
+    stats: {
+      views: 3241,
+      comments: 86,
+    }
   },
   {
     id: 'meme5',
@@ -66,6 +81,10 @@ const MOCK_MEMES = [
       id: 'user5',
       username: 'CleanCoder',
     },
+    stats: {
+      views: 1568,
+      comments: 32,
+    }
   },
 ];
 
@@ -74,10 +93,12 @@ const HomePage = () => {
   const [memes, setMemes] = useState(MOCK_MEMES);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const { isAuthenticated } = useAuth();
   
   useEffect(() => {
     // This would be an API call in a real app
     setMemes(MOCK_MEMES);
+    setPage(1);
   }, [activeFilter]);
 
   const handleFilterChange = (filter: FeedType) => {
@@ -104,6 +125,11 @@ const HomePage = () => {
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">Featured</h2>
           <FeaturedMeme meme={MOCK_MEME_OF_THE_DAY} />
+        </section>
+        
+        {/* Trending section */}
+        <section className="mb-12">
+          <TrendingMemes />
         </section>
         
         {/* Feed section */}
