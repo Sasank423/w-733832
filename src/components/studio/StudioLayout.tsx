@@ -17,6 +17,8 @@ interface StudioLayoutProps {
   onAddCaption: () => void;
   onUpdateCaption: (id: string, updates: any) => void;
   onRemoveCaption: (id: string) => void;
+  currentImageIndex?: number;
+  onChangeImage?: (index: number) => void;
 }
 
 export const StudioLayout = ({
@@ -26,11 +28,12 @@ export const StudioLayout = ({
   onPublish,
   onAddCaption,
   onUpdateCaption,
-  onRemoveCaption
+  onRemoveCaption,
+  currentImageIndex = 0,
+  onChangeImage
 }: StudioLayoutProps) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>("edit");
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Update a specific caption property
   const handleCaptionUpdate = (id: string, updates: any) => {
@@ -40,13 +43,17 @@ export const StudioLayout = ({
   // Handle image navigation
   const goToPreviousImage = () => {
     if (meme.imageUrls?.length > 1) {
-      setCurrentImageIndex(prev => (prev === 0 ? meme.imageUrls.length - 1 : prev - 1));
+      if (onChangeImage) {
+        onChangeImage(currentImageIndex === 0 ? meme.imageUrls.length - 1 : currentImageIndex - 1);
+      }
     }
   };
 
   const goToNextImage = () => {
     if (meme.imageUrls?.length > 1) {
-      setCurrentImageIndex(prev => (prev === meme.imageUrls.length - 1 ? 0 : prev + 1));
+      if (onChangeImage) {
+        onChangeImage(currentImageIndex === meme.imageUrls.length - 1 ? 0 : currentImageIndex + 1);
+      }
     }
   };
 
@@ -163,6 +170,8 @@ export const StudioLayout = ({
           <MemePreview 
             meme={{...meme, imageUrl: currentImageUrl}} 
             onUpdateCaption={handleCaptionUpdate}
+            currentImageIndex={currentImageIndex}
+            onChangeImage={onChangeImage}
           />
         </div>
         
