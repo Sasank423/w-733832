@@ -1,12 +1,14 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { MessageSquare, Heart, TrendingUp } from 'lucide-react';
+import { MessageSquare, ThumbsUp, TrendingUp } from 'lucide-react';
 import { useTrendingMemes } from '@/hooks/useMemes';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TrendingMemesProps {
   limit?: number;
@@ -14,8 +16,36 @@ interface TrendingMemesProps {
 
 const TrendingMemes = ({ limit = 3 }: TrendingMemesProps) => {
   const [activeTab, setActiveTab] = useState<'rising' | 'weekly' | 'allTime'>('rising');
-  
+  const [localMemes, setLocalMemes] = useState<any[]>([]);
   const { data: memes, isLoading } = useTrendingMemes(activeTab, limit);
+  const queryClient = useQueryClient();
+  
+  // Keep local state in sync with the query data
+  useEffect(() => {
+    if (memes) {
+      setLocalMemes(memes);
+    }
+  }, [memes]);
+  
+  // Set up real-time subscription for vote updates
+  useEffect(() => {
+    // Subscribe to changes on the votes table
+    const subscription = supabase
+      .channel('votes-channel')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'votes' 
+      }, (payload) => {
+        // When a vote changes, refetch the trending memes
+        queryClient.invalidateQueries({ queryKey: ['trending-memes'] });
+      })
+      .subscribe();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [queryClient]);
 
   return (
     <div className="trending-memes">
@@ -127,10 +157,17 @@ const TrendingMemeCard = ({ meme, rank }: TrendingMemeCardProps) => {
       
       <CardFooter className="p-3 pt-1 flex items-center justify-between">
         <div className="flex items-center space-x-3 text-sm">
+          {/* Likes */}
           <div className="flex items-center">
-            <Heart className="h-3 w-3 mr-1" />
+            <ThumbsUp className="h-3 w-3 mr-1 text-blue-500" />
             <span className="text-xs">{meme.vote_count}</span>
           </div>
+          {/* Dislikes */}
+          <div className="flex items-center">
+            <ThumbsUp className="h-3 w-3 mr-1 rotate-180 text-red-500" />
+            <span className="text-xs">{meme.dislike_count}</span>
+          </div>
+          {/* Comments */}
           <div className="flex items-center">
             <MessageSquare className="h-3 w-3 mr-1" />
             <span className="text-xs">{meme.comment_count}</span>

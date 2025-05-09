@@ -37,7 +37,10 @@ const HomePage = () => {
     setIsLoading(true);
     let query = supabase
       .from('memes')
-      .select('*')
+      .select(`
+        *,
+        creator:profiles(id, username, avatar, created_at, updated_at)
+      `)
       .order('created_at', { ascending: false })
       .range(reset ? 0 : memes.length, (reset ? 0 : memes.length) + 9);
     // You can add filter logic here based on activeFilter
@@ -255,14 +258,14 @@ const HomePage = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8 mr-1">
-                                <AvatarImage src={meme.creator_avatar || ''} />
+                                <AvatarImage src={meme.creator?.avatar || ''} />
                                 <AvatarFallback>
-                                  {meme.creator_username ? meme.creator_username.charAt(0).toUpperCase() : '?'}
+                                  {meme.creator?.username ? meme.creator.username.charAt(0).toUpperCase() : '?'}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <span className="font-medium">
-                                  {meme.creator_username || 'Unknown'}
+                                  {meme.creator?.username || 'Unknown'}
                                 </span>
                                 <p className="text-xs text-muted-foreground">
                                   {meme.created_at ? new Date(meme.created_at).toLocaleDateString() : ''}
@@ -289,39 +292,44 @@ const HomePage = () => {
                         <CardFooter className="flex justify-between p-4 border-t">
                           <div className="flex gap-4 items-center">
                             {/* Like Button */}
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              disabled={!isAuthenticated} 
-                              className={`${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVote.data?.value === 1 ? 'text-blue-500' : ''}`}
-                              onClick={() => handleVote(meme.id, 1)}
-                            >
-                              <motion.div
-                                whileTap={{ scale: 1.3 }}
-                                transition={{ type: 'spring', stiffness: 300 }}
-                                className="flex items-center"
+                            <div className="flex items-center rounded-md overflow-hidden border border-input">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                disabled={!isAuthenticated} 
+                                className={`px-2 rounded-none ${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVote.data?.value === 1 ? 'text-blue-500 bg-blue-50 dark:bg-blue-950/20' : ''}`}
+                                onClick={() => handleVote(meme.id, 1)}
                               >
-                                <ThumbsUp className={`mr-1 h-4 w-4 ${userVote.data?.value === 1 ? 'fill-current' : ''}`} />
-                                <span>{meme.vote_count}</span>
-                              </motion.div>
-                            </Button>
+                                <motion.div
+                                  whileTap={{ scale: 1.3 }}
+                                  transition={{ type: 'spring', stiffness: 300 }}
+                                  className="flex items-center"
+                                >
+                                  <ThumbsUp className={`mr-1 h-4 w-4 ${userVote.data?.value === 1 ? 'fill-current' : ''}`} />
+                                </motion.div>
+                              </Button>
+                              <div className="px-2 bg-muted/50 text-sm font-medium">{meme.vote_count}</div>
+                            </div>
+                            
                             {/* Dislike Button */}
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              disabled={!isAuthenticated} 
-                              className={`${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVote.data?.value === -1 ? 'text-red-500' : ''}`}
-                              onClick={() => handleVote(meme.id, -1)}
-                            >
-                              <motion.div
-                                whileTap={{ scale: 1.3 }}
-                                transition={{ type: 'spring', stiffness: 300 }}
-                                className="flex items-center"
+                            <div className="flex items-center rounded-md overflow-hidden border border-input">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                disabled={!isAuthenticated} 
+                                className={`px-2 rounded-none ${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVote.data?.value === -1 ? 'text-red-500 bg-red-50 dark:bg-red-950/20' : ''}`}
+                                onClick={() => handleVote(meme.id, -1)}
                               >
-                                <ThumbsUp className={`mr-1 h-4 w-4 rotate-180 ${userVote.data?.value === -1 ? 'fill-current' : ''}`} />
-                                <span>{meme.dislike_count}</span>
-                              </motion.div>
-                            </Button>
+                                <motion.div
+                                  whileTap={{ scale: 1.3 }}
+                                  transition={{ type: 'spring', stiffness: 300 }}
+                                  className="flex items-center"
+                                >
+                                  <ThumbsUp className={`mr-1 h-4 w-4 rotate-180 ${userVote.data?.value === -1 ? 'fill-current' : ''}`} />
+                                </motion.div>
+                              </Button>
+                              <div className="px-2 bg-muted/50 text-sm font-medium">{meme.dislike_count}</div>
+                            </div>
                             {/* Comment Button */}
                             <Button 
                               variant="ghost" 
@@ -358,7 +366,7 @@ const HomePage = () => {
             </div>
             {/* Comment Sidebar */}
             {selectedMeme && (
-              <div className="max-w-[700px] w-full mx-auto ml-8">
+              <div className="max-w-[400px] w-[40%] ml-4 sticky top-16 self-start mt-8">
                 <CommentSidebar memeId={selectedMeme} onClose={() => setSelectedMeme(null)} />
               </div>
             )}

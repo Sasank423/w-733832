@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,7 +26,33 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const { data: comments = [], isLoading } = useComments(memeId);
   const addCommentMutation = useAddCommentMutation();
+  const queryClient = useQueryClient();
   const MAX_CHARS = 140;
+  
+  // Setup real-time updates for comments
+  useEffect(() => {
+    // Subscribe to changes on the comments table for this specific meme
+    const subscription = supabase
+      .channel(`comments-channel-${memeId}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'comments',
+        filter: `meme_id=eq.${memeId}`
+      }, (payload) => {
+        // When a comment is added, updated, or deleted, refresh the comments
+        queryClient.invalidateQueries({ queryKey: ['comments', memeId] });
+        
+        // Also refresh the meme data to get accurate counts
+        queryClient.invalidateQueries({ queryKey: ['meme', memeId] });
+        queryClient.invalidateQueries({ queryKey: ['meme-feed'] });
+      })
+      .subscribe();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [memeId, queryClient]);
   
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
@@ -88,17 +116,17 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
   };
   
   return (
-    <Card className="h-full flex flex-col max-w-[500px] w-full mx-auto">
-      <CardHeader className="flex-row justify-between items-center py-3 border-b">
-        <h3 className="text-lg font-semibold">Comments ({isLoading ? '...' : comments.length})</h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>
+    <Card className="flex flex-col w-full mx-auto max-w-[400px] border border-gray-200 dark:border-gray-800 shadow-lg h-[70vh] max-h-[70vh] relative top-0 right-0 bg-card">
+      <CardHeader className="flex-row justify-between items-center py-2 px-3 border-b">
+        <h3 className="text-base font-semibold">Comments ({isLoading ? '...' : comments.length})</h3>
+        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </CardHeader>
       
       <CardContent className="p-0 flex-grow overflow-hidden">
-        <ScrollArea className="h-[calc(100vh-300px)]">
-          <div className="p-4 space-y-4">
+        <ScrollArea className="h-[calc(70vh-120px)] max-h-[calc(70vh-120px)]">
+          <div className="p-3 space-y-2">
             {isLoading ? (
               <div className="text-center py-8 text-gray-500">
                 <p>Loading comments...</p>
@@ -160,14 +188,14 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
         </ScrollArea>
       </CardContent>
       
-      <CardFooter className="p-4 border-t">
-        <div className="w-full space-y-2">
+      <CardFooter className="p-3 border-t">
+        <div className="w-full space-y-1">
           <Textarea
             ref={commentInputRef}
             placeholder={isAuthenticated ? "Add a comment..." : "Log in to comment"}
             value={commentText}
             onChange={handleCommentChange}
-            className="min-h-[80px] w-full"
+            className="min-h-[60px] w-full text-sm"
             disabled={!isAuthenticated || addCommentMutation.isPending}
           />
           

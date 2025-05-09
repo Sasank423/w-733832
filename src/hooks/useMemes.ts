@@ -213,85 +213,32 @@ export const useVoteMutation = () => {
       if (!user) throw new Error('You must be logged in to vote');
       // value: 1 for like, -1 for dislike
 
-      // Get current vote
-      const { data: existingVote, error: voteError } = await supabase
-        .from('votes')
-        .select('id, value')
-        .eq('meme_id', memeId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (voteError) throw voteError;
+      try {
+        // Use the new vote_on_meme function which works with our trigger system
+        const { data, error } = await supabase.rpc('vote_on_meme', {
+          p_meme_id: memeId,
+          p_vote_value: value
+        });
 
-      // Get current meme data
-      const { data: memeData, error: memeError } = await supabase
-        .from('memes')
-        .select('vote_count, dislike_count')
-        .eq('id', memeId)
-        .single();
-      if (memeError) throw memeError;
-      let newVoteCount = memeData.vote_count || 0;
-      let newDislikeCount = memeData.dislike_count || 0;
-
-      if (existingVote) {
-        if (existingVote.value === value) {
-          // User clicked the same button again: remove vote
-          const { error: deleteError } = await supabase
-            .from('votes')
-            .delete()
-            .eq('id', existingVote.id);
-          if (deleteError) throw deleteError;
-          if (value === 1) newVoteCount -= 1;
-          else newDislikeCount -= 1;
-          // Update meme
-          const { error: updateError } = await supabase
-            .from('memes')
-            .update({ vote_count: newVoteCount, dislike_count: newDislikeCount })
-            .eq('id', memeId);
-          if (updateError) throw updateError;
-          return null;
-        } else {
-          // User is switching vote (like <-> dislike)
-          // Update vote
-          const { data: updatedVote, error: updateVoteError } = await supabase
-            .from('votes')
-            .update({ value })
-            .eq('id', existingVote.id)
-            .select()
-            .single();
-          if (updateVoteError) throw updateVoteError;
-          if (value === 1) {
-            newVoteCount += 1;
-            newDislikeCount -= 1;
-          } else {
-            newVoteCount -= 1;
-            newDislikeCount += 1;
-          }
-          // Update meme
-          const { error: updateError } = await supabase
-            .from('memes')
-            .update({ vote_count: newVoteCount, dislike_count: newDislikeCount })
-            .eq('id', memeId);
-          if (updateError) throw updateError;
-          return updatedVote;
+        if (error) {
+          console.error('Error voting on meme:', error);
+          throw error;
         }
-      }
 
-      // No vote exists, create new vote
-      const { data: newVote, error: insertError } = await supabase
-        .from('votes')
-        .insert({ meme_id: memeId, user_id: user.id, value })
-        .select()
-        .single();
-      if (insertError) throw insertError;
-      if (value === 1) newVoteCount += 1;
-      else newDislikeCount += 1;
-      // Update meme
-      const { error: updateError } = await supabase
-        .from('memes')
-        .update({ vote_count: newVoteCount, dislike_count: newDislikeCount })
-        .eq('id', memeId);
-      if (updateError) throw updateError;
-      return newVote;
+        // After successful vote, get the current vote status
+        const { data: voteData, error: voteError } = await supabase
+          .from('votes')
+          .select('id, value')
+          .eq('meme_id', memeId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (voteError) throw voteError;
+        return voteData; // This might be null if the vote was removed
+      } catch (error) {
+        console.error('Failed to vote:', error);
+        throw error;
+      }
     },
     onSuccess: (_, variables) => {
       // Invalidate all relevant queries to ensure UI is in sync

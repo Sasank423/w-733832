@@ -36,6 +36,7 @@ export const useAddCommentMutation = () => {
     mutationFn: async ({ memeId, text }: { memeId: string, text: string }) => {
       if (!user) throw new Error('You must be logged in to comment');
       
+      // Add the comment - the trigger will handle updating the count
       const { data, error } = await supabase
         .from('comments')
         .insert({
@@ -53,8 +54,11 @@ export const useAddCommentMutation = () => {
       return data;
     },
     onSuccess: (_, variables) => {
+      // Invalidate relevant queries to update UI
       queryClient.invalidateQueries({ queryKey: ['comments', variables.memeId] });
       queryClient.invalidateQueries({ queryKey: ['meme', variables.memeId] });
+      queryClient.invalidateQueries({ queryKey: ['meme-feed'] }); // For the browse page
+      queryClient.invalidateQueries({ queryKey: ['trending-memes'] }); // For trending section
       
       toast({
         title: "Comment posted",
@@ -77,6 +81,7 @@ export const useDeleteCommentMutation = () => {
   
   return useMutation({
     mutationFn: async ({ commentId, memeId }: { commentId: string, memeId: string }) => {
+      // Delete the comment - the trigger will handle updating the count
       const { error } = await supabase
         .from('comments')
         .delete()
@@ -86,8 +91,11 @@ export const useDeleteCommentMutation = () => {
       return { commentId, memeId };
     },
     onSuccess: ({ memeId }) => {
+      // Invalidate relevant queries to update UI
       queryClient.invalidateQueries({ queryKey: ['comments', memeId] });
       queryClient.invalidateQueries({ queryKey: ['meme', memeId] });
+      queryClient.invalidateQueries({ queryKey: ['meme-feed'] }); // For the browse page
+      queryClient.invalidateQueries({ queryKey: ['trending-memes'] }); // For trending section
       
       toast({
         title: "Comment deleted",
