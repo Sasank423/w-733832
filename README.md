@@ -1,73 +1,95 @@
-# Welcome to your Lovable project
+# ImageGenHub - Community Meme Generator & Voting Platform
 
-## Project info
+## Overview
 
-**URL**: https://lovable.dev/projects/5c86e191-b377-459a-b4e0-9f36ccba4384
+ImageGenHub is a dedicated platform for developers and tech enthusiasts to create, share, and vote on code-related memes. The application provides a comprehensive suite of tools for meme creation, community interaction, and content discovery.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+### Meme Creation Studio
+- **Template Gallery**: Choose from 30+ popular meme templates
+- **Image Upload**: Upload your own images for customization
+- **Text Captions**: Add and position text captions with drag-and-drop functionality
+- **Styling Options**: Customize font size, color, family, and add text shadows
+- **Draft System**: Save works-in-progress and continue editing later
 
-**Use Lovable**
+### Community Interaction
+- **Voting System**: Upvote or downvote memes (one vote per user)
+- **Comments**: Engage in discussions with a comment section for each meme
+- **Content Moderation**: Flag inappropriate content for review
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5c86e191-b377-459a-b4e0-9f36ccba4384) and start prompting.
+### Content Discovery
+- **Feed Filters**: Browse memes by New, Top 24h, Top Week, or All Time
+- **Infinite Scroll**: Seamlessly load more content as you browse
+- **Trending Content**: Discover the Meme of the Day and Weekly Champion
 
-Changes made via Lovable will be committed automatically to this repo.
+### User Dashboard
+- **Creator Dashboard**: View your published memes with engagement statistics
+- **Drafts Management**: Access and manage your saved drafts
+- **Profile Page**: View your created and liked memes in one place
 
-**Use your preferred IDE**
+## Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **UI Components**: shadcn/ui, Framer Motion for animations
+- **Backend**: Supabase (PostgreSQL, Authentication, Storage)
+- **Build Tool**: Vite
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Getting Started
 
-Follow these steps:
+### Prerequisites
+- Node.js (v16+)
+- npm or yarn
+- Supabase account (for backend services)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/imagegenhub.git
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Navigate to project directory
+cd imagegenhub
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Install dependencies
+npm install
+
+# Set up environment variables
+# Create a .env file based on .env.example
+
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Supabase Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The project uses Supabase for backend functionality. The database schema migrations are included in the `supabase/migrations` directory.
 
-**Use GitHub Codespaces**
+1. Create a Supabase project
+2. Run the migrations or import the SQL files
+3. Configure authentication providers
+4. Update your environment variables with Supabase credentials
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Project Structure
 
-## What technologies are used for this project?
+```
+├── public/             # Static assets
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── hooks/          # Custom React hooks
+│   ├── integrations/   # Third-party service integrations
+│   ├── lib/            # Utility functions and helpers
+│   ├── pages/          # Application pages/routes
+│   ├── styles/         # Global styles
+│   └── types/          # TypeScript type definitions
+└── supabase/          # Supabase configuration and migrations
+```
 
-This project is built with:
+## Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/5c86e191-b377-459a-b4e0-9f36ccba4384) and click on Share -> Publish.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
