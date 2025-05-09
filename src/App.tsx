@@ -15,6 +15,8 @@ import CreatorDashboard from "./pages/CreatorDashboard";
 import MemePage from "./pages/MemePage";
 import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ const App = () => (
               <Route path="/settings" element={<ProfileSettings />} />
               <Route path="/meme/:id" element={<MemePage />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

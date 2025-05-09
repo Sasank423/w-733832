@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -36,16 +37,12 @@ const LoginForm = ({ onSwitchToSignup }: LoginFormProps) => {
     try {
       setIsLoading(true);
       await login(data.email, data.password);
-      toast({
-        title: "Success",
-        description: "You have been logged in.",
-        variant: "default",
-      });
-    } catch (error) {
+      // The useEffect in AuthModal will handle closing when isAuthenticated becomes true
+    } catch (error: any) {
       console.error(error);
       toast({
         title: "Error",
-        description: "Invalid email or password. Please try again.",
+        description: error.message || "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -94,7 +91,12 @@ const LoginForm = ({ onSwitchToSignup }: LoginFormProps) => {
         className="w-full" 
         disabled={isLoading}
       >
-        {isLoading ? 'Logging in...' : 'Log in'}
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Logging in...
+          </>
+        ) : 'Log in'}
       </Button>
       
       <div className="text-center">

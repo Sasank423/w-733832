@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 const signupSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -44,15 +45,16 @@ const SignupForm = ({ onSwitchToLogin }: SignupFormProps) => {
       setIsLoading(true);
       await signup(data.email, data.password, data.username);
       toast({
-        title: "Success",
-        description: "Your account has been created.",
+        title: "Account created",
+        description: "Please check your email for verification.",
         variant: "default",
       });
-    } catch (error) {
+      onSwitchToLogin(); // Direct users to login after signup
+    } catch (error: any) {
       console.error(error);
       toast({
         title: "Error",
-        description: "Could not create your account. Please try again.",
+        description: error.message || "Could not create your account. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -123,7 +125,12 @@ const SignupForm = ({ onSwitchToLogin }: SignupFormProps) => {
         className="w-full" 
         disabled={isLoading}
       >
-        {isLoading ? 'Creating account...' : 'Sign up'}
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Creating account...
+          </>
+        ) : 'Sign up'}
       </Button>
       
       <div className="text-center">

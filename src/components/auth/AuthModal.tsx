@@ -28,7 +28,7 @@ const AuthModal = ({ isOpen, onClose, initialView }: AuthModalProps) => {
   }, [isAuthenticated, onClose]);
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">
