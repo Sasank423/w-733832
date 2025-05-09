@@ -8,11 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { Link } from "react-router-dom";
-import { Plus, Eye, MessageSquare, Heart } from "lucide-react";
-import TrendingMemes from "@/components/meme/TrendingMemes";
+import { Plus, Eye, MessageSquare, Heart, ArrowLeft } from "lucide-react";
 import MemeStats from "@/components/dashboard/MemeStats";
-import MemeOfTheDay from "@/components/dashboard/MemeOfTheDay";
-import WeeklyChampion from "@/components/dashboard/WeeklyChampion";
 
 // Mock data for user memes and stats
 const MOCK_USER_MEMES = [
@@ -63,39 +60,28 @@ const MOCK_USER_MEMES = [
   }
 ];
 
-// Mock data for meme of the day
-const MOCK_MEME_OF_THE_DAY = {
-  id: 'meme1',
-  title: 'When the code finally works',
-  imageUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5',
-  description: 'That feeling when your code compiles without errors on the first try. A miracle indeed!',
-  creator: {
-    id: 'user1',
-    username: 'CodeMaster',
+// Mock data for drafts
+const MOCK_USER_DRAFTS = [
+  {
+    id: "draft1",
+    title: "Work in progress meme",
+    imageUrl: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7",
+    lastEdited: "2023-05-10T14:20:00Z",
   },
-  voteCount: 1562,
-  createdAt: '2023-05-08T12:00:00Z'
-};
-
-// Mock data for weekly champion
-const MOCK_WEEKLY_CHAMPION = {
-  id: 'meme3',
-  title: 'Monday mornings be like',
-  imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b',
-  description: 'That moment when your alarm goes off and reality hits. Monday mornings are truly something else.',
-  creator: {
-    id: 'user3',
-    username: 'CoffeeAddict',
+  {
+    id: "draft2",
+    title: "Funny idea for later",
+    imageUrl: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+    lastEdited: "2023-05-09T08:45:00Z",
   },
-  voteCount: 987,
-  createdAt: '2023-05-06T09:15:00Z'
-};
+];
 
 const CreatorDashboard = () => {
   useProtectedRoute();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [memes, setMemes] = useState(MOCK_USER_MEMES);
+  const [drafts, setDrafts] = useState(MOCK_USER_DRAFTS);
   const [activeTab, setActiveTab] = useState("overview");
   const [statsLoading, setStatsLoading] = useState(false);
 
@@ -128,6 +114,15 @@ const CreatorDashboard = () => {
     });
   };
 
+  const handleDeleteDraft = (draftId: string) => {
+    // In a real app, this would call an API to delete the draft
+    setDrafts(drafts.filter(draft => draft.id !== draftId));
+    toast({
+      title: "Draft deleted",
+      description: "Your draft has been successfully deleted.",
+    });
+  };
+
   if (isLoading) return <Layout><div className="container-layout py-8">Loading...</div></Layout>;
   if (!isAuthenticated) return null; // This should be handled by useProtectedRoute
 
@@ -135,7 +130,14 @@ const CreatorDashboard = () => {
     <Layout>
       <div className="container-layout py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Creator Dashboard</h1>
+          <div className="flex items-center">
+            <Button asChild variant="ghost" size="icon" className="mr-2">
+              <Link to="/dashboard">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+            <h1 className="text-3xl font-bold">Creator Dashboard</h1>
+          </div>
           <Button asChild>
             <Link to="/create" className="flex items-center space-x-2">
               <Plus className="w-4 h-4" />
@@ -144,84 +146,68 @@ const CreatorDashboard = () => {
           </Button>
         </div>
 
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-brand-purple/10 p-4 mb-4">
+                  <Heart className="h-8 w-8 text-brand-purple" />
+                </div>
+                <h3 className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    memes.reduce((total, meme) => total + meme.voteCount, 0).toLocaleString()
+                  )}
+                </h3>
+                <p className="text-gray-500">Total Votes</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-amber-500/10 p-4 mb-4">
+                  <MessageSquare className="h-8 w-8 text-amber-500" />
+                </div>
+                <h3 className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    memes.reduce((total, meme) => total + (meme.stats?.comments || 0), 0).toLocaleString()
+                  )}
+                </h3>
+                <p className="text-gray-500">Total Comments</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-blue-500/10 p-4 mb-4">
+                  <Eye className="h-8 w-8 text-blue-500" />
+                </div>
+                <h3 className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    memes.reduce((total, meme) => total + (meme.stats?.views || 0), 0).toLocaleString()
+                  )}
+                </h3>
+                <p className="text-gray-500">Total Views</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="my-memes">My Memes</TabsTrigger>
-            <TabsTrigger value="trending">Trending</TabsTrigger>
+            <TabsTrigger value="drafts">Drafts</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="overview" className="space-y-8">
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <div className="rounded-full bg-brand-purple/10 p-4 mb-4">
-                      <Heart className="h-8 w-8 text-brand-purple" />
-                    </div>
-                    <h3 className="text-2xl font-bold">
-                      {statsLoading ? (
-                        <span className="animate-pulse">...</span>
-                      ) : (
-                        memes.reduce((total, meme) => total + meme.voteCount, 0).toLocaleString()
-                      )}
-                    </h3>
-                    <p className="text-gray-500">Total Votes</p>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <div className="rounded-full bg-amber-500/10 p-4 mb-4">
-                      <MessageSquare className="h-8 w-8 text-amber-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold">
-                      {statsLoading ? (
-                        <span className="animate-pulse">...</span>
-                      ) : (
-                        memes.reduce((total, meme) => total + (meme.stats?.comments || 0), 0).toLocaleString()
-                      )}
-                    </h3>
-                    <p className="text-gray-500">Total Comments</p>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <div className="rounded-full bg-blue-500/10 p-4 mb-4">
-                      <Eye className="h-8 w-8 text-blue-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold">
-                      {statsLoading ? (
-                        <span className="animate-pulse">...</span>
-                      ) : (
-                        memes.reduce((total, meme) => total + (meme.stats?.views || 0), 0).toLocaleString()
-                      )}
-                    </h3>
-                    <p className="text-gray-500">Total Views</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Featured Memes */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <MemeOfTheDay meme={MOCK_MEME_OF_THE_DAY} />
-              <WeeklyChampion meme={MOCK_WEEKLY_CHAMPION} />
-            </div>
-
-            {/* Trending Section */}
-            <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-blue-100 dark:border-blue-900/30">
-              <CardContent className="p-6">
-                <TrendingMemes limit={3} />
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="my-memes" className="space-y-6">
             <div className="flex justify-between items-center mb-4">
@@ -252,12 +238,43 @@ const CreatorDashboard = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="trending">
-            <Card className="overflow-hidden">
-              <CardContent className="p-6">
-                <TrendingMemes limit={6} />
-              </CardContent>
-            </Card>
+          <TabsContent value="drafts" className="space-y-6">
+            {drafts.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">You don't have any drafts.</p>
+                <Button asChild className="mt-4">
+                  <Link to="/create">Create a Meme</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {drafts.map(draft => (
+                  <div key={draft.id} className="border rounded-lg overflow-hidden">
+                    <div className="aspect-square relative">
+                      <img 
+                        src={draft.imageUrl} 
+                        alt={draft.title} 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+                        <p className="text-white p-4 font-medium">{draft.title}</p>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-gray-500">Last edited: {new Date(draft.lastEdited).toLocaleDateString()}</p>
+                      <div className="mt-2 flex justify-between">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/create?draft=${draft.id}`}>Edit</Link>
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteDraft(draft.id)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, Search, Moon, Sun, Eye } from "lucide-react";
+import { Menu, Search, Moon, Sun, Eye, Award, TrendingUp } from "lucide-react";
 import UserMenu from "@/components/user/UserMenu";
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/auth/AuthModal';
@@ -79,6 +79,18 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
               </Link>
             </Button>
             
+            <Button variant="ghost" size="sm" asChild className="mr-2">
+              <Link to="/browse">
+                <TrendingUp className="h-4 w-4 mr-1" /> Trending
+              </Link>
+            </Button>
+            
+            <Button variant="ghost" size="sm" asChild className="mr-2">
+              <Link to="/dashboard">
+                <Award className="h-4 w-4 mr-1" /> Highlights
+              </Link>
+            </Button>
+            
             {isAuthenticated ? (
               <>
                 <Button variant="ghost" size="sm" asChild>
@@ -141,6 +153,14 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
               <Eye className="h-5 w-5 mr-2" /> Browse Memes
             </Link>
             
+            <Link to="/browse" className="flex items-center block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
+              <TrendingUp className="h-5 w-5 mr-2" /> Trending
+            </Link>
+            
+            <Link to="/dashboard" className="flex items-center block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
+              <Award className="h-5 w-5 mr-2" /> Highlights
+            </Link>
+            
             {isAuthenticated ? (
               <>
                 <Link to="/create" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
@@ -149,8 +169,8 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
                 <Link to="/notifications" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Notifications
                 </Link>
-                <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
-                  Dashboard
+                <Link to="/creator" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
+                  Creator Dashboard
                 </Link>
                 <Link to="/settings" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Settings

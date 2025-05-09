@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
-import { ThumbsUp, MessageSquare, Share2 } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Share2, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import CommentSidebar from '@/components/meme/CommentSidebar';
+import TrendingMemes from '@/components/meme/TrendingMemes';
 
 // Mock data - In a real app, this would come from an API
 const MOCK_MEMES = [
@@ -87,6 +88,7 @@ const HomePage = () => {
   const { toast } = useToast();
   const observer = useRef<IntersectionObserver | null>(null);
   const [selectedMeme, setSelectedMeme] = useState<string | null>(null);
+  const [showTrendingSection, setShowTrendingSection] = useState(true);
   
   // Function to fetch more memes (simulated)
   const fetchMoreMemes = useCallback(async () => {
@@ -151,6 +153,28 @@ const HomePage = () => {
   return (
     <Layout>
       <div className="container-layout py-8">
+        {/* Trending Section */}
+        {showTrendingSection && (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                <span>Trending Now</span>
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowTrendingSection(false)}
+              >
+                Hide Section
+              </Button>
+            </div>
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border border-blue-100 dark:border-blue-900/30 rounded-xl p-6">
+              <TrendingMemes limit={3} />
+            </div>
+          </section>
+        )}
+        
         {/* Feed section */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Meme Feed</h2>
@@ -256,7 +280,7 @@ const HomePage = () => {
             </div>
             
             {selectedMeme && (
-              <div className="w-2/5 pl-4">
+              <div className={`w-2/5 pl-4 sticky top-[80px] self-start max-h-[calc(100vh-100px)]`}>
                 <CommentSidebar memeId={selectedMeme} onClose={() => setSelectedMeme(null)} />
               </div>
             )}

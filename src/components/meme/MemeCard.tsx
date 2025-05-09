@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
-import { Flag, MessageSquare, Share, Heart } from 'lucide-react';
+import { Flag, MessageSquare, Share, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AnimatePresence, motion } from '@/components/ui/motion';
@@ -40,9 +40,11 @@ interface MemeCardProps {
       comments?: number;
     };
   };
+  showBackButton?: boolean;
 }
 
-const MemeCard = ({ meme }: MemeCardProps) => {
+const MemeCard = ({ meme, showBackButton = false }: MemeCardProps) => {
+  const navigate = useNavigate();
   const [votes, setVotes] = useState(meme.voteCount);
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
   const [showFlagDialog, setShowFlagDialog] = useState(false);
@@ -124,10 +126,25 @@ const MemeCard = ({ meme }: MemeCardProps) => {
     });
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   const formattedDate = new Date(meme.createdAt).toLocaleDateString();
 
   return (
     <div className={`meme-card group relative ${meme.isFeatured ? 'border-2 border-brand-purple' : ''}`}>
+      {showBackButton && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur-sm"
+          onClick={handleGoBack}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+      )}
+      
       {/* Badge overlays */}
       {meme.isMemeOfTheDay && (
         <div className="absolute top-2 right-2 z-10">

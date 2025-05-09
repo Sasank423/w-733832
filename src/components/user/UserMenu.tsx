@@ -49,10 +49,7 @@ const UserMenu = ({ user }: UserMenuProps) => {
           <Link to="/profile">My Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/my-memes">My Memes</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/favorites">Favorites</Link>
+          <Link to="/creator">My Memes</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
