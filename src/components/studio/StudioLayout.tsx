@@ -14,17 +14,28 @@ interface StudioLayoutProps {
   onMemeUpdate: (updates: Partial<MemeDraft>) => void;
   onSaveDraft: () => void;
   onPublish: () => void;
+  onAddCaption: () => void;
+  onUpdateCaption: (id: string, updates: any) => void;
+  onRemoveCaption: (id: string) => void;
 }
 
 export const StudioLayout = ({
   meme,
   onMemeUpdate,
   onSaveDraft,
-  onPublish
+  onPublish,
+  onAddCaption,
+  onUpdateCaption,
+  onRemoveCaption
 }: StudioLayoutProps) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>("edit");
   
+  // Update a specific caption property
+  const handleCaptionUpdate = (id: string, updates: any) => {
+    onUpdateCaption(id, updates);
+  };
+
   if (isMobile) {
     return (
       <div className="flex flex-col gap-4">
@@ -38,12 +49,18 @@ export const StudioLayout = ({
           <TabsContent value="edit">
             <EditingTools 
               meme={meme} 
-              onMemeUpdate={onMemeUpdate} 
+              onMemeUpdate={onMemeUpdate}
+              onAddCaption={onAddCaption}
+              onUpdateCaption={handleCaptionUpdate}
+              onRemoveCaption={onRemoveCaption}
             />
           </TabsContent>
           
           <TabsContent value="preview">
-            <MemePreview meme={meme} />
+            <MemePreview 
+              meme={meme} 
+              onUpdateCaption={handleCaptionUpdate} 
+            />
           </TabsContent>
           
           <TabsContent value="templates">
@@ -81,7 +98,10 @@ export const StudioLayout = ({
       <div className="col-span-3">
         <EditingTools 
           meme={meme} 
-          onMemeUpdate={onMemeUpdate} 
+          onMemeUpdate={onMemeUpdate}
+          onAddCaption={onAddCaption}
+          onUpdateCaption={handleCaptionUpdate}
+          onRemoveCaption={onRemoveCaption}
         />
       </div>
 
@@ -89,7 +109,10 @@ export const StudioLayout = ({
       <div className="col-span-6">
         <div className="bg-muted p-4 rounded-lg">
           <h2 className="text-lg font-medium mb-4">Preview</h2>
-          <MemePreview meme={meme} />
+          <MemePreview 
+            meme={meme} 
+            onUpdateCaption={handleCaptionUpdate}
+          />
         </div>
         
         <div className="flex justify-center gap-4 mt-6">

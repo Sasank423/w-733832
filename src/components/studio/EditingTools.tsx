@@ -1,5 +1,5 @@
 
-import { ChangeEvent, useRef } from 'react';
+import { ChangeEvent, useRef, useState } from 'react';
 import { MemeDraft } from '@/pages/MemeCreationStudio';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,19 +20,23 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { 
-  Bold, 
-  Italic, 
   AlignLeft, 
   AlignCenter, 
   AlignRight,
   SlidersHorizontal,
-  FileImage
+  FileImage,
+  Plus,
+  Trash2,
+  Edit
 } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 
 interface EditingToolsProps {
   meme: MemeDraft;
   onMemeUpdate: (updates: Partial<MemeDraft>) => void;
+  onAddCaption: () => void;
+  onUpdateCaption: (id: string, updates: any) => void;
+  onRemoveCaption: (id: string) => void;
 }
 
 const FONT_OPTIONS = [
@@ -48,8 +52,9 @@ const FONT_OPTIONS = [
 const MAX_FILE_SIZE_MB = 5;
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 
-const EditingTools = ({ meme, onMemeUpdate }: EditingToolsProps) => {
+const EditingTools = ({ meme, onMemeUpdate, onAddCaption, onUpdateCaption, onRemoveCaption }: EditingToolsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editingCaptionId, setEditingCaptionId] = useState<string | null>(null);
   
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,6 +84,10 @@ const EditingTools = ({ meme, onMemeUpdate }: EditingToolsProps) => {
 
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleEditCaption = (captionId: string, value: string) => {
+    onUpdateCaption(captionId, { text: value });
   };
 
   return (
@@ -113,27 +122,108 @@ const EditingTools = ({ meme, onMemeUpdate }: EditingToolsProps) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Caption</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Text Captions</CardTitle>
+            <Button 
+              size="sm" 
+              onClick={onAddCaption} 
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Caption
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="topCaption">Top Caption</Label>
-            <Input 
-              id="topCaption"
-              value={meme.topCaption}
-              onChange={(e) => onMemeUpdate({ topCaption: e.target.value })}
-              placeholder="TOP TEXT HERE"
-            />
-          </div>
+          {meme.textCaptions.length === 0 ? (
+            <div className="text-center py-6 border border-dashed rounded-md">
+              <p className="text-muted-foreground">No captions added yet.</p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-2" 
+                onClick={onAddCaption}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Your First Caption
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {meme.textCaptions.map((caption) => (
+                <div key={caption.id} className="p-3 border rounded-md">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-sm font-medium">Caption</h4>
+                    <div className="flex gap-1">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-6 w-6" 
+                        onClick={() => setEditingCaptionId(caption.id === editingCaptionId ? null : caption.id)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-6 w-6 text-destructive" 
+                        onClick={() => onRemoveCaption(caption.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Input 
+                    value={caption.text}
+                    onChange={(e) => handleEditCaption(caption.id, e.target.value)}
+                    className="mb-2"
+                  />
+                  {editingCaptionId === caption.id && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <Label className="text-xs">X: {caption.position.x.toFixed(0)}%</Label>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={[caption.position.x]}
+                          onValueChange={(value) => onUpdateCaption(caption.id, { position: { ...caption.position, x: value[0] } })}
+                          className="py-2"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Y: {caption.position.y.toFixed(0)}%</Label>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={[caption.position.y]}
+                          onValueChange={(value) => onUpdateCaption(caption.id, { position: { ...caption.position, y: value[0] } })}
+                          className="py-2"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           
           <div>
-            <Label htmlFor="bottomCaption">Bottom Caption</Label>
-            <Input 
-              id="bottomCaption"
-              value={meme.bottomCaption}
-              onChange={(e) => onMemeUpdate({ bottomCaption: e.target.value })}
-              placeholder="BOTTOM TEXT HERE"
-            />
+            <Label htmlFor="textColor">Text Color</Label>
+            <div className="flex gap-2">
+              <Input 
+                id="textColor"
+                type="color" 
+                value={meme.textColor}
+                onChange={(e) => onMemeUpdate({ textColor: e.target.value })}
+                className="w-12 h-10 p-1"
+              />
+              <Input 
+                value={meme.textColor}
+                onChange={(e) => onMemeUpdate({ textColor: e.target.value })}
+                className="flex-1"
+                maxLength={7}
+              />
+            </div>
           </div>
           
           <div>
@@ -157,25 +247,6 @@ const EditingTools = ({ meme, onMemeUpdate }: EditingToolsProps) => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="textColor">Text Color</Label>
-            <div className="flex gap-2">
-              <Input 
-                id="textColor"
-                type="color" 
-                value={meme.textColor}
-                onChange={(e) => onMemeUpdate({ textColor: e.target.value })}
-                className="w-12 h-10 p-1"
-              />
-              <Input 
-                value={meme.textColor}
-                onChange={(e) => onMemeUpdate({ textColor: e.target.value })}
-                className="flex-1"
-                maxLength={7}
-              />
-            </div>
           </div>
           
           <div>

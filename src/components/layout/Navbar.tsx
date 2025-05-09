@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, Search, Moon, Sun } from "lucide-react";
+import { Menu, Search, Moon, Sun, Eye } from "lucide-react";
 import UserMenu from "@/components/user/UserMenu";
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/auth/AuthModal';
@@ -73,6 +73,12 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
             
+            <Button variant="ghost" size="sm" asChild className="mr-2">
+              <Link to="/browse">
+                <Eye className="h-4 w-4 mr-1" /> Browse
+              </Link>
+            </Button>
+            
             {isAuthenticated ? (
               <>
                 <Button variant="ghost" size="sm" asChild>
@@ -83,7 +89,12 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" onClick={() => openModal('login')}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  id="auth-modal-trigger" 
+                  onClick={() => openModal('login')}
+                >
                   Log in
                 </Button>
                 <Button onClick={() => openModal('signup')}>
@@ -125,11 +136,16 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
               {theme === 'dark' ? <Sun className="h-5 w-5 mr-2" /> : <Moon className="h-5 w-5 mr-2" />}
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </Button>
-            <Link to="/create" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
-              Create
+            
+            <Link to="/browse" className="flex items-center block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
+              <Eye className="h-5 w-5 mr-2" /> Browse Memes
             </Link>
+            
             {isAuthenticated ? (
               <>
+                <Link to="/create" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
+                  Create
+                </Link>
                 <Link to="/notifications" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Notifications
                 </Link>

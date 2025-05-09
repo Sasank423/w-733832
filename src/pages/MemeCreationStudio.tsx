@@ -7,22 +7,27 @@ import { StudioLayout } from '@/components/studio/StudioLayout';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from '@/components/ui/sonner';
 
+// Define draggable text caption structure
+interface DraggableCaption {
+  id: string;
+  text: string;
+  position: { x: number; y: number };
+  fontSize: number;
+  color: string;
+  fontFamily: string;
+}
+
 // Define meme draft structure
 export interface MemeDraft {
   id?: string;
   templateId?: string;
   imageUrl: string;
-  topCaption: string;
-  bottomCaption: string;
+  textCaptions: DraggableCaption[];
   textColor: string;
   fontSize: number;
   fontFamily: string;
   alignment: 'left' | 'center' | 'right';
   textShadow: boolean;
-  additionalCaptions: Array<{
-    text: string;
-    position: { x: number; y: number };
-  }>;
   filter: {
     brightness: number;
     contrast: number;
@@ -40,14 +45,12 @@ const MemeCreationStudio = () => {
   // Initialize meme state with default values
   const [meme, setMeme] = useState<MemeDraft>({
     imageUrl: '',
-    topCaption: '',
-    bottomCaption: '',
+    textCaptions: [],
     textColor: '#ffffff',
     fontSize: 32,
     fontFamily: 'Impact',
     alignment: 'center',
     textShadow: true,
-    additionalCaptions: [],
     filter: {
       brightness: 100,
       contrast: 100,
@@ -69,6 +72,41 @@ const MemeCreationStudio = () => {
   // Handle updates to the meme state
   const handleMemeUpdate = (updates: Partial<MemeDraft>) => {
     setMeme(prev => ({ ...prev, ...updates }));
+  };
+
+  // Add a new text caption
+  const handleAddCaption = () => {
+    const newCaption: DraggableCaption = {
+      id: `caption-${Date.now()}`,
+      text: 'New Caption',
+      position: { x: 50, y: 50 }, // Center of the image
+      fontSize: meme.fontSize,
+      color: meme.textColor,
+      fontFamily: meme.fontFamily,
+    };
+
+    setMeme(prev => ({
+      ...prev,
+      textCaptions: [...prev.textCaptions, newCaption],
+    }));
+  };
+
+  // Update a specific caption
+  const handleUpdateCaption = (id: string, updates: Partial<DraggableCaption>) => {
+    setMeme(prev => ({
+      ...prev,
+      textCaptions: prev.textCaptions.map(caption => 
+        caption.id === id ? { ...caption, ...updates } : caption
+      ),
+    }));
+  };
+
+  // Remove a caption
+  const handleRemoveCaption = (id: string) => {
+    setMeme(prev => ({
+      ...prev,
+      textCaptions: prev.textCaptions.filter(caption => caption.id !== id),
+    }));
   };
 
   // Auto-save the meme draft
@@ -99,10 +137,10 @@ const MemeCreationStudio = () => {
       return;
     }
 
-    if (!meme.topCaption && !meme.bottomCaption && meme.additionalCaptions.length === 0) {
+    if (meme.textCaptions.length === 0) {
       shadowToast({
         title: 'Cannot publish',
-        description: 'Please add at least one caption to your meme.',
+        description: 'Please add at least one text caption to your meme.',
         variant: 'destructive',
       });
       return;
@@ -128,6 +166,9 @@ const MemeCreationStudio = () => {
           onMemeUpdate={handleMemeUpdate}
           onSaveDraft={handleSaveDraft}
           onPublish={handlePublish}
+          onAddCaption={handleAddCaption}
+          onUpdateCaption={handleUpdateCaption}
+          onRemoveCaption={handleRemoveCaption}
         />
       </div>
     </Layout>

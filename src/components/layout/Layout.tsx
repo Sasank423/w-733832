@@ -30,7 +30,7 @@ const Layout = ({ children, fullWidth = false }: LayoutProps) => {
         </Button>
       </div>
       <Navbar isCollapsed={isNavbarCollapsed} toggleCollapse={toggleNavbar} />
-      <main className={`flex-grow transition-all duration-300 ${isNavbarCollapsed ? 'md:ml-0' : 'md:ml-0'} ${fullWidth ? '' : 'container-layout'}`}>
+      <main className={`flex-grow transition-all duration-300 ${isNavbarCollapsed ? 'md:ml-16' : 'md:ml-0'} ${fullWidth ? '' : 'container-layout'}`}>
         {children}
       </main>
       <Footer />

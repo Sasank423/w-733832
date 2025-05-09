@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
 import Layout from '@/components/layout/Layout';
+import { Eye } from 'lucide-react';
 
 const Landing = () => {
   const { isAuthenticated } = useAuth();
@@ -29,11 +30,13 @@ const Landing = () => {
                   </Button>
                 ) : (
                   <>
-                    <Button size="lg" asChild>
-                      <Link to="/signup">Get Started</Link>
+                    <Button size="lg" onClick={() => document.getElementById('auth-modal-trigger')?.click()}>
+                      Get Started
                     </Button>
                     <Button variant="outline" size="lg" asChild>
-                      <Link to="/login">Log In</Link>
+                      <Link to="/browse">
+                        <Eye className="mr-2 h-5 w-5" /> Just Browse
+                      </Link>
                     </Button>
                   </>
                 )}
@@ -111,9 +114,16 @@ const Landing = () => {
           <p className="text-xl mb-8 max-w-3xl mx-auto text-muted-foreground">Join thousands of creators on ImageGenHub and share your creativity with the world.</p>
           
           {!isAuthenticated && (
-            <Button size="lg" asChild>
-              <Link to="/signup">Sign Up Now - It's Free!</Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button size="lg" onClick={() => document.getElementById('auth-modal-trigger')?.click()}>
+                Sign Up Now - It's Free!
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/browse">
+                  <Eye className="mr-2 h-5 w-5" /> Just Browse
+                </Link>
+              </Button>
+            </div>
           )}
         </div>
       </section>
