@@ -10,18 +10,15 @@ const SupabaseTest = () => {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        // A simple query to check if we can connect to Supabase
-        const { data, error } = await supabase.from('_dummy_query').select('*').limit(1);
+        // Just check if we can connect to Supabase by getting the server timestamp
+        const { data, error } = await supabase.rpc('get_timestamp');
         
-        if (error && error.code === '42P01') {
-          // Error code 42P01 means relation does not exist, which is expected
-          // since we're querying a non-existent table. This confirms we can connect.
-          setConnectionStatus('connected');
-        } else if (error) {
+        if (error) {
           console.error('Supabase connection error:', error);
           setConnectionStatus('error');
         } else {
           setConnectionStatus('connected');
+          console.log('Connected to Supabase:', data);
         }
       } catch (error) {
         console.error('Unexpected error:', error);
