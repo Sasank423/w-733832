@@ -3,19 +3,33 @@ import { useState } from 'react';
 import { MemeDraft } from '@/pages/MemeCreationStudio';
 import { Card } from '@/components/ui/card';
 import { Move } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface MemePreviewProps {
   meme: MemeDraft;
   onUpdateCaption?: (id: string, updates: { position: { x: number; y: number } }) => void;
   isEditing?: boolean;
+  currentImageIndex?: number;
+  onChangeImage?: (index: number) => void;
 }
 
-const MemePreview = ({ meme, onUpdateCaption, isEditing = true }: MemePreviewProps) => {
+const MemePreview = ({ 
+  meme, 
+  onUpdateCaption, 
+  isEditing = true, 
+  currentImageIndex = 0,
+  onChangeImage
+}: MemePreviewProps) => {
   const [activeCaption, setActiveCaption] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
+  const imageUrl = meme.imageUrls && meme.imageUrls.length > 0 ? 
+    meme.imageUrls[currentImageIndex] : 
+    meme.imageUrl;
+
   // If no image is selected, show a placeholder
-  if (!meme.imageUrl) {
+  if (!imageUrl) {
     return (
       <div className="w-full aspect-square bg-muted flex items-center justify-center rounded-md border border-dashed">
         <p className="text-muted-foreground">Select an image to create your meme</p>
@@ -65,6 +79,20 @@ const MemePreview = ({ meme, onUpdateCaption, isEditing = true }: MemePreviewPro
     setActiveCaption(null);
   };
 
+  const handlePrevImage = () => {
+    if (!meme.imageUrls || !onChangeImage) return;
+    const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : meme.imageUrls.length - 1;
+    onChangeImage(newIndex);
+  };
+
+  const handleNextImage = () => {
+    if (!meme.imageUrls || !onChangeImage) return;
+    const newIndex = (currentImageIndex + 1) % meme.imageUrls.length;
+    onChangeImage(newIndex);
+  };
+
+  const hasMultipleImages = meme.imageUrls && meme.imageUrls.length > 1;
+
   return (
     <div className="relative max-w-md mx-auto">
       <Card className="overflow-hidden">
@@ -76,11 +104,40 @@ const MemePreview = ({ meme, onUpdateCaption, isEditing = true }: MemePreviewPro
         >
           {/* The meme image */}
           <img 
-            src={meme.imageUrl} 
+            src={imageUrl} 
             alt="Meme template" 
             className="w-full h-auto object-contain max-h-[500px]"
             style={{ filter: filterString }}
           />
+
+          {/* Image navigation controls */}
+          {hasMultipleImages && (
+            <div className="absolute inset-x-0 top-1/2 flex justify-between transform -translate-y-1/2 px-4">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="opacity-70 hover:opacity-100"
+                onClick={handlePrevImage}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="opacity-70 hover:opacity-100"
+                onClick={handleNextImage}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
+
+          {/* Image counter */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+              {currentImageIndex + 1} / {meme.imageUrls.length}
+            </div>
+          )}
 
           {/* Draggable captions */}
           {meme.textCaptions.map((caption) => (

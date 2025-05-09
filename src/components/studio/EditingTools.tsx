@@ -1,4 +1,3 @@
-
 import { ChangeEvent, useRef, useState } from 'react';
 import { MemeDraft } from '@/pages/MemeCreationStudio';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,9 @@ import {
   Plus,
   Trash2,
   Edit,
-  Images
+  Images,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 
@@ -36,6 +37,7 @@ interface EditingToolsProps {
   onUpdateCaption: (id: string, updates: any) => void;
   onRemoveCaption: (id: string) => void;
   currentImageIndex?: number;
+  onChangeImage?: (index: number) => void;
 }
 
 const FONT_OPTIONS = [
@@ -57,7 +59,8 @@ const EditingTools = ({
   onAddCaption, 
   onUpdateCaption, 
   onRemoveCaption,
-  currentImageIndex = 0
+  currentImageIndex = 0,
+  onChangeImage
 }: EditingToolsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editingCaptionId, setEditingCaptionId] = useState<string | null>(null);
@@ -111,6 +114,28 @@ const EditingTools = ({
     // Add a placeholder for a new image
     const newImageUrls = [...(meme.imageUrls || []), ''];
     onMemeUpdate({ imageUrls: newImageUrls });
+    
+    // Switch to the new image
+    if (onChangeImage) {
+      onChangeImage(newImageUrls.length - 1);
+    }
+  };
+
+  const removeCurrentImage = () => {
+    if (!meme.imageUrls || meme.imageUrls.length <= 1) {
+      toast('Cannot remove', {
+        description: 'You need at least one image in your meme.',
+      });
+      return;
+    }
+
+    const newImageUrls = meme.imageUrls.filter((_, index) => index !== currentImageIndex);
+    onMemeUpdate({ imageUrls: newImageUrls });
+    
+    // Adjust current index if needed
+    if (onChangeImage && currentImageIndex >= newImageUrls.length) {
+      onChangeImage(newImageUrls.length - 1);
+    }
   };
 
   const triggerFileUpload = () => {
@@ -133,20 +158,46 @@ const EditingTools = ({
     onUpdateCaption(captionId, { fontFamily });
   };
 
+  const handlePrevImage = () => {
+    if (!meme.imageUrls || !onChangeImage) return;
+    const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : meme.imageUrls.length - 1;
+    onChangeImage(newIndex);
+  };
+
+  const handleNextImage = () => {
+    if (!meme.imageUrls || !onChangeImage) return;
+    const newIndex = (currentImageIndex + 1) % meme.imageUrls.length;
+    onChangeImage(newIndex);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Images</CardTitle>
-            <Button 
-              size="icon" 
-              variant="outline" 
-              onClick={addNewImage} 
-              title="Add another image"
-            >
-              <Images className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              {meme.imageUrls && meme.imageUrls.length > 1 && (
+                <Button 
+                  size="icon" 
+                  variant="destructive" 
+                  onClick={removeCurrentImage} 
+                  title="Remove current image"
+                  className="h-8 w-8"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button 
+                size="icon" 
+                variant="outline" 
+                onClick={addNewImage} 
+                title="Add another image"
+                className="h-8 w-8"
+              >
+                <Images className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -158,6 +209,31 @@ const EditingTools = ({
               accept={ALLOWED_FILE_TYPES.join(',')}
               onChange={handleFileChange}
             />
+            
+            {meme.imageUrls && meme.imageUrls.length > 1 && (
+              <div className="flex justify-between items-center mb-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handlePrevImage}
+                  className="h-8 w-8"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm">
+                  Image {currentImageIndex + 1} of {meme.imageUrls.length}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleNextImage}
+                  className="h-8 w-8"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            
             <Button 
               onClick={triggerFileUpload} 
               variant="outline" 
@@ -172,12 +248,6 @@ const EditingTools = ({
             <div className="text-xs text-muted-foreground">
               JPG, PNG, GIF formats. Max {MAX_FILE_SIZE_MB}MB.
             </div>
-            
-            {meme.imageUrls && meme.imageUrls.length > 0 && (
-              <div className="text-xs text-muted-foreground">
-                Image {currentImageIndex + 1} of {meme.imageUrls.length}
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>

@@ -42,6 +42,9 @@ const MemeCreationStudio = () => {
   const navigate = useNavigate();
   const { toast: shadowToast } = useToast();
 
+  // Track the current image index
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   // Initialize meme state with default values
   const [meme, setMeme] = useState<MemeDraft>({
     imageUrl: '',
@@ -184,6 +187,8 @@ const MemeCreationStudio = () => {
           onAddCaption={handleAddCaption}
           onUpdateCaption={handleUpdateCaption}
           onRemoveCaption={handleRemoveCaption}
+          currentImageIndex={currentImageIndex}
+          onChangeImage={setCurrentImageIndex}
         />
       </div>
     </Layout>

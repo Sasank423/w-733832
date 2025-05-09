@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
+import { useAuth } from "@/hooks/useAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -17,6 +18,14 @@ interface AuthModalProps {
 
 const AuthModal = ({ isOpen, onClose, initialView }: AuthModalProps) => {
   const [view, setView] = useState<'login' | 'signup'>(initialView);
+  const { isAuthenticated } = useAuth();
+  
+  // Automatically close modal when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      onClose();
+    }
+  }, [isAuthenticated, onClose]);
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

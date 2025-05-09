@@ -101,6 +101,55 @@ const TEMPLATES = [
     name: 'Waiting Skeleton',
     imageUrl: 'https://i.imgflip.com/2fm6x.jpg',
     category: 'waiting'
+  },
+  // Additional templates
+  {
+    id: 'template16',
+    name: 'Always Has Been',
+    imageUrl: 'https://i.imgflip.com/46e43q.jpg',
+    category: 'conspiracy'
+  },
+  {
+    id: 'template17',
+    name: 'Buff Doge vs. Cheems',
+    imageUrl: 'https://i.imgflip.com/43a45p.png',
+    category: 'comparisons'
+  },
+  {
+    id: 'template18',
+    name: 'Trade Offer',
+    imageUrl: 'https://i.imgflip.com/54hjww.jpg',
+    category: 'negotiations'
+  },
+  {
+    id: 'template19',
+    name: 'Anakin Padme 4 Panel',
+    imageUrl: 'https://i.imgflip.com/5c7lwq.png',
+    category: 'misunderstandings'
+  },
+  {
+    id: 'template20',
+    name: 'Bernie Sanders Once Again Asking',
+    imageUrl: 'https://i.imgflip.com/3oevdk.jpg',
+    category: 'requests'
+  },
+  {
+    id: 'template21',
+    name: 'So Anyway I Started Blasting',
+    imageUrl: 'https://i.imgflip.com/3m6riq.jpg', 
+    category: 'reactions'
+  },
+  {
+    id: 'template22',
+    name: 'They\'re The Same Picture',
+    imageUrl: 'https://i.imgflip.com/2za3u1.jpg',
+    category: 'comparisons'
+  },
+  {
+    id: 'template23',
+    name: 'This Is Fine',
+    imageUrl: 'https://i.imgflip.com/wxica.jpg',
+    category: 'denial'
   }
 ];
 
