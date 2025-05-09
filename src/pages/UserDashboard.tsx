@@ -21,9 +21,7 @@ import TrendingMemes from '@/components/meme/TrendingMemes';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import Avatar from "@/components/ui/avatar";
-import AvatarImage from "@/components/ui/avatar-image";
-import AvatarFallback from "@/components/ui/avatar-fallback";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 // Mock data for user dashboard
 const MOCK_USER_MEMES = [
