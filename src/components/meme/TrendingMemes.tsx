@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -134,8 +134,27 @@ const MOCK_TRENDING_MEMES = {
   ]
 };
 
-const TrendingMemes = () => {
+interface TrendingMemesProps {
+  limit?: number;
+}
+
+const TrendingMemes = ({ limit = 3 }: TrendingMemesProps) => {
   const [activeTab, setActiveTab] = useState('rising');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // In a real application, we'd fetch data here with useEffect
+  useEffect(() => {
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+  }, [activeTab]);
+
+  const getMemesToRender = (category: string) => {
+    const memes = MOCK_TRENDING_MEMES[category as keyof typeof MOCK_TRENDING_MEMES] || [];
+    return limit ? memes.slice(0, limit) : memes;
+  };
 
   return (
     <div className="trending-memes">
@@ -156,29 +175,48 @@ const TrendingMemes = () => {
           <TabsTrigger value="allTime">All Time</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="rising">
+        {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {MOCK_TRENDING_MEMES.rising.map((meme, index) => (
-              <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
+            {[...Array(limit)].map((_, i) => (
+              <Card key={i} className="overflow-hidden shadow-sm">
+                <div className="h-40 bg-gray-200 animate-pulse"></div>
+                <CardHeader className="p-3 pb-0">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2 w-3/4"></div>
+                  <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
+                </CardHeader>
+                <CardFooter className="p-3 pt-1 flex justify-between">
+                  <div className="h-3 bg-gray-100 rounded animate-pulse w-1/4"></div>
+                </CardFooter>
+              </Card>
             ))}
           </div>
-        </TabsContent>
+        ) : (
+          <>
+            <TabsContent value="rising">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getMemesToRender('rising').map((meme, index) => (
+                  <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
+                ))}
+              </div>
+            </TabsContent>
 
-        <TabsContent value="weekly">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {MOCK_TRENDING_MEMES.weekly.map((meme, index) => (
-              <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
-            ))}
-          </div>
-        </TabsContent>
+            <TabsContent value="weekly">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getMemesToRender('weekly').map((meme, index) => (
+                  <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
+                ))}
+              </div>
+            </TabsContent>
 
-        <TabsContent value="allTime">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {MOCK_TRENDING_MEMES.allTime.map((meme, index) => (
-              <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
-            ))}
-          </div>
-        </TabsContent>
+            <TabsContent value="allTime">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getMemesToRender('allTime').map((meme, index) => (
+                  <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
+                ))}
+              </div>
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );

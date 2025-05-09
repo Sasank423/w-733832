@@ -168,12 +168,19 @@ const UserDashboard = () => {
       <div className="container-layout py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">My Dashboard</h1>
-          <Button asChild>
-            <Link to="/create" className="flex items-center space-x-2">
-              <Plus className="w-4 h-4" />
-              <span>Create Meme</span>
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link to="/creator" className="flex items-center space-x-2">
+                <span>Creator Dashboard</span>
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to="/create" className="flex items-center space-x-2">
+                <Plus className="w-4 h-4" />
+                <span>Create Meme</span>
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
