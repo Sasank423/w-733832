@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -20,55 +20,29 @@ import Layout from '@/components/layout/Layout';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import CommentSection from '@/components/meme/CommentSection';
-
-// Mock data for testing purposes
-const MOCK_MEME = {
-  id: 'meme1',
-  title: 'When the code finally works',
-  description: 'That feeling when your code compiles without errors on the first try',
-  imageUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5',
-  createdAt: '2023-05-15T12:00:00Z',
-  updatedAt: '2023-05-15T12:00:00Z',
-  creator: {
-    id: 'user1',
-    username: 'CodeMaster',
-    avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=CodeMaster',
-  },
-  tags: ['coding', 'programming', 'funny'],
-  stats: {
-    views: 1250,
-    comments: 32,
-    shares: 48
-  },
-  voteCount: 537,
-  isWeeklyChampion: true
-};
+import { useMeme, useVoteMutation, useUserVote } from '@/hooks/useMemes';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const MemePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
-  const [meme, setMeme] = useState(MOCK_MEME);
-  const [isLoading, setIsLoading] = useState(false);
-  const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
-  const [votes, setVotes] = useState(MOCK_MEME.voteCount);
+  const { data: meme, isLoading, error } = useMeme(id);
+  const { data: userVote } = useUserVote(id);
+  const voteMutation = useVoteMutation();
 
   useEffect(() => {
-    // In a real app, fetch the meme data using the ID
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Here you would actually set the meme from API data
-    }, 500);
-    
-    // Update view count
-    // In a real app, you'd make an API call to increment the view count
+    if (id) {
+      // Update view count
+      supabase.functions.invoke('increment_view_count', {
+        body: { memeId: id },
+      });
+    }
   }, [id]);
 
-  const handleVote = (type: 'up' | 'down') => {
+  const handleVote = (value: 1 | -1) => {
     if (!isAuthenticated) {
       toast({
         title: "Authentication required",
@@ -78,21 +52,7 @@ const MemePage = () => {
       return;
     }
     
-    if (type === userVote) {
-      // User is removing their vote
-      setVotes(type === 'up' ? votes - 1 : votes + 1);
-      setUserVote(null);
-    } else {
-      // User is changing vote or adding new vote
-      if (userVote === null) {
-        // Adding a new vote
-        setVotes(type === 'up' ? votes + 1 : votes - 1);
-      } else {
-        // Changing from up to down or vice versa (counts double)
-        setVotes(type === 'up' ? votes + 2 : votes - 2);
-      }
-      setUserVote(type);
-    }
+    voteMutation.mutate({ memeId: id!, value });
   };
 
   const handleShare = () => {
@@ -114,11 +74,60 @@ const MemePage = () => {
     navigate(-1);
   };
 
-  if (isLoading) {
+  if (error) {
     return (
       <Layout>
-        <div className="container-layout py-8 flex justify-center">
-          <div className="h-12 w-12 border-4 border-t-brand-purple rounded-full animate-spin"></div>
+        <div className="container-layout py-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Meme not found</h2>
+            <p className="mt-2 text-muted-foreground">The meme you're looking for might have been removed or doesn't exist.</p>
+            <Button className="mt-4" onClick={handleGoBack}>
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (isLoading || !meme) {
+    return (
+      <Layout>
+        <div className="container-layout py-8">
+          <div className="flex items-center mb-6">
+            <Button variant="outline" size="icon" onClick={handleGoBack} className="mr-2">
+              <ArrowLeft className="h-4 w-4" />
+              <span className="sr-only">Back</span>
+            </Button>
+            <h1 className="text-2xl font-bold">Meme Details</h1>
+          </div>
+
+          <Card className="overflow-hidden">
+            <div className="flex flex-col md:flex-row">
+              <div className="md:w-2/3">
+                <Skeleton className="w-full h-[60vh]" />
+              </div>
+              
+              <div className="md:w-1/3 p-6">
+                <Skeleton className="h-8 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-full mb-4" />
+                <Skeleton className="h-4 w-full mb-2" />
+                
+                <div className="flex items-center mb-6 mt-4">
+                  <Skeleton className="h-8 w-8 rounded-full mr-2" />
+                  <div>
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-16 mt-1" />
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </Layout>
     );
@@ -138,11 +147,14 @@ const MemePage = () => {
         <Card className="overflow-hidden bg-card">
           <div className="flex flex-col md:flex-row">
             <div className="md:w-2/3 relative">
-              {meme.isWeeklyChampion && (
+              {meme.is_weekly_champion && (
                 <Badge className="absolute top-4 right-4 bg-amber-500">Weekly Champion</Badge>
               )}
+              {meme.is_meme_of_day && (
+                <Badge className="absolute top-4 right-4 bg-brand-purple">Meme of the Day</Badge>
+              )}
               <img 
-                src={meme.imageUrl} 
+                src={meme.image_url} 
                 alt={meme.title}
                 className="w-full h-auto max-h-[80vh] object-contain bg-black"
               />
@@ -157,24 +169,24 @@ const MemePage = () => {
               
               <div className="flex items-center mb-6">
                 <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage src={meme.creator.avatar} />
-                  <AvatarFallback>{meme.creator.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={meme.creator?.avatar} />
+                  <AvatarFallback>{meme.creator?.username?.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <Link to={`/profile/${meme.creator.id}`} className="font-medium hover:underline">
-                    {meme.creator.username}
+                  <Link to={`/profile/${meme.creator?.id}`} className="font-medium hover:underline">
+                    {meme.creator?.username}
                   </Link>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(meme.createdAt).toLocaleDateString()}
+                    {new Date(meme.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
               
               <div className="flex flex-wrap gap-2 mb-4">
-                {meme.tags.map((tag) => (
-                  <Link key={tag} to={`/browse?tag=${tag}`}>
+                {meme.tags?.map((tagObj: any) => (
+                  <Link key={tagObj.tag_id} to={`/browse?tag=${tagObj.tags?.name}`}>
                     <Badge variant="secondary" className="hover:bg-secondary/80 cursor-pointer">
-                      #{tag}
+                      #{tagObj.tags?.name}
                     </Badge>
                   </Link>
                 ))}
@@ -186,23 +198,23 @@ const MemePage = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleVote('up')}
-                      className={userVote === 'up' ? 'text-brand-purple' : ''}
+                      onClick={() => handleVote(1)}
+                      className={userVote?.value === 1 ? 'text-brand-purple' : ''}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={userVote === 'up' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={userVote?.value === 1 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 19V5M5 12l7-7 7 7" />
                       </svg>
                     </Button>
                     
-                    <span className="mx-1 font-medium">{votes}</span>
+                    <span className="mx-1 font-medium">{meme.vote_count}</span>
                     
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleVote('down')}
-                      className={userVote === 'down' ? 'text-brand-purple' : ''}
+                      onClick={() => handleVote(-1)}
+                      className={userVote?.value === -1 ? 'text-brand-purple' : ''}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={userVote === 'down' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={userVote?.value === -1 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 5v14M5 12l7 7 7-7" />
                       </svg>
                     </Button>
@@ -224,10 +236,10 @@ const MemePage = () => {
               
               <div className="flex justify-between text-sm text-muted-foreground mt-auto pt-4 border-t">
                 <span className="flex items-center">
-                  <Heart className="h-4 w-4 mr-1" /> {meme.voteCount} votes
+                  <Heart className="h-4 w-4 mr-1" /> {meme.vote_count} votes
                 </span>
                 <span className="flex items-center">
-                  <MessageSquare className="h-4 w-4 mr-1" /> {meme.stats.comments} comments
+                  <MessageSquare className="h-4 w-4 mr-1" /> {meme.comment_count} comments
                 </span>
               </div>
             </div>

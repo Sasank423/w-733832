@@ -4,22 +4,12 @@ import { Button } from '@/components/ui/button';
 import Layout from '@/components/layout/Layout';
 import FeaturedMeme from '@/components/meme/FeaturedMeme';
 import TrendingMemes from '@/components/meme/TrendingMemes';
-
-// Mock featured meme data
-const featuredMeme = {
-  id: "featured1",
-  title: "When the code finally works after 5 hours of debugging",
-  imageUrl: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=2020&auto=format&fit=crop",
-  description: "That feeling when your code finally runs without errors after hours of debugging.",
-  creator: {
-    id: "user1",
-    username: "codewizard",
-  },
-  voteCount: 1542,
-  isMemeOfTheDay: true
-};
+import { useFeaturedMeme } from '@/hooks/useMemes';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Landing = () => {
+  const { data: featuredMeme, isLoading: isLoadingFeatured } = useFeaturedMeme();
+
   return (
     <Layout>
       <section className="container-layout py-8">
@@ -43,7 +33,21 @@ const Landing = () => {
         {/* Featured Meme */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6">Featured Meme</h2>
-          <FeaturedMeme meme={featuredMeme} />
+          
+          {isLoadingFeatured ? (
+            <div className="rounded-xl overflow-hidden">
+              <Skeleton className="w-full h-64 md:h-96" />
+            </div>
+          ) : featuredMeme ? (
+            <FeaturedMeme meme={featuredMeme as any} />
+          ) : (
+            <div className="text-center p-12 border rounded-lg">
+              <p className="text-gray-500">No featured memes yet. Be the first to create one!</p>
+              <Button className="mt-4" asChild>
+                <Link to="/create">Create a Meme</Link>
+              </Button>
+            </div>
+          )}
         </div>
         
         {/* Trending Memes */}

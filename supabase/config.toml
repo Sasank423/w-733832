@@ -1,1 +1,5 @@
+
 project_id = "ejwuhpxsegirgupezxem"
+
+[functions.increment_view_count]
+verify_jwt = false

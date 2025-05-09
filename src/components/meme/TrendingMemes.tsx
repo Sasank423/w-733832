@@ -1,160 +1,21 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MessageSquare, Heart, TrendingUp } from 'lucide-react';
-
-// Mock data for trending memes
-const MOCK_TRENDING_MEMES = {
-  rising: [
-    {
-      id: 'meme7',
-      title: 'When you finally fix that bug',
-      imageUrl: 'https://images.unsplash.com/photo-1550439062-609e1531270e',
-      voteCount: 324,
-      commentCount: 42,
-      creator: {
-        id: 'user7',
-        username: 'BugFixPro',
-        avatar: ''
-      },
-      createdAt: '2023-05-05T18:20:00Z'
-    },
-    {
-      id: 'meme8',
-      title: 'Coffee first, code later',
-      imageUrl: 'https://images.unsplash.com/photo-1517677129300-07b130802f46',
-      voteCount: 187,
-      commentCount: 18,
-      creator: {
-        id: 'user8',
-        username: 'CaffeineOverload',
-        avatar: ''
-      },
-      createdAt: '2023-05-05T16:15:00Z'
-    },
-    {
-      id: 'meme9',
-      title: 'My code in production',
-      imageUrl: 'https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2',
-      voteCount: 256,
-      commentCount: 29,
-      creator: {
-        id: 'user9',
-        username: 'ProdWarrior',
-        avatar: ''
-      },
-      createdAt: '2023-05-05T12:10:00Z'
-    }
-  ],
-  weekly: [
-    {
-      id: 'meme10',
-      title: 'Ultimate debugging technique',
-      imageUrl: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713',
-      voteCount: 986,
-      commentCount: 104,
-      creator: {
-        id: 'user10',
-        username: 'ConsoleLogMaster',
-        avatar: ''
-      },
-      createdAt: '2023-05-03T12:20:00Z'
-    },
-    {
-      id: 'meme11',
-      title: 'Frontend vs Backend',
-      imageUrl: 'https://images.unsplash.com/photo-1518773553398-650c184e0bb3',
-      voteCount: 845,
-      commentCount: 92,
-      creator: {
-        id: 'user11',
-        username: 'FullStackWizard',
-        avatar: ''
-      },
-      createdAt: '2023-05-02T10:15:00Z'
-    },
-    {
-      id: 'meme12',
-      title: 'When the client wants changes',
-      imageUrl: 'https://images.unsplash.com/photo-1535551951406-a19828b0a76b',
-      voteCount: 723,
-      commentCount: 78,
-      creator: {
-        id: 'user12',
-        username: 'ClientWhisperer',
-        avatar: ''
-      },
-      createdAt: '2023-05-01T14:30:00Z'
-    }
-  ],
-  allTime: [
-    {
-      id: 'meme13',
-      title: 'Stack overflow saves the day',
-      imageUrl: 'https://images.unsplash.com/photo-1526649661456-89c7ed4d00b8',
-      voteCount: 5642,
-      commentCount: 342,
-      creator: {
-        id: 'user13',
-        username: 'SOLegend',
-        avatar: ''
-      },
-      createdAt: '2023-02-15T10:00:00Z'
-    },
-    {
-      id: 'meme14',
-      title: 'When your code works on first try',
-      imageUrl: 'https://images.unsplash.com/photo-1557599443-2071a2df9c19',
-      voteCount: 4987,
-      commentCount: 289,
-      creator: {
-        id: 'user14',
-        username: 'FirstTryWizard',
-        avatar: ''
-      },
-      createdAt: '2023-01-10T12:45:00Z'
-    },
-    {
-      id: 'meme15',
-      title: 'CSS expectations vs reality',
-      imageUrl: 'https://images.unsplash.com/photo-1581276879432-15e50529f34b',
-      voteCount: 4521,
-      commentCount: 317,
-      creator: {
-        id: 'user15',
-        username: 'CSSStruggler',
-        avatar: ''
-      },
-      createdAt: '2022-12-05T16:30:00Z'
-    }
-  ]
-};
+import { useTrendingMemes } from '@/hooks/useMemes';
 
 interface TrendingMemesProps {
   limit?: number;
 }
 
 const TrendingMemes = ({ limit = 3 }: TrendingMemesProps) => {
-  const [activeTab, setActiveTab] = useState('rising');
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'rising' | 'weekly' | 'allTime'>('rising');
   
-  // In a real application, we'd fetch data here with useEffect
-  useEffect(() => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-  }, [activeTab]);
-
-  const getMemesToRender = (category: string) => {
-    const memes = MOCK_TRENDING_MEMES[category as keyof typeof MOCK_TRENDING_MEMES] || [];
-    return limit ? memes.slice(0, limit) : memes;
-  };
+  const { data: memes, isLoading } = useTrendingMemes(activeTab, limit);
 
   return (
     <div className="trending-memes">
@@ -168,7 +29,7 @@ const TrendingMemes = ({ limit = 3 }: TrendingMemesProps) => {
         </Link>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'rising' | 'weekly' | 'allTime')} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="rising">Rising</TabsTrigger>
           <TabsTrigger value="weekly">Weekly Best</TabsTrigger>
@@ -192,25 +53,25 @@ const TrendingMemes = ({ limit = 3 }: TrendingMemesProps) => {
           </div>
         ) : (
           <>
-            <TabsContent value="rising">
+            <TabsContent value="rising" className="mt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {getMemesToRender('rising').map((meme, index) => (
+                {memes?.map((meme, index) => (
                   <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
                 ))}
               </div>
             </TabsContent>
 
-            <TabsContent value="weekly">
+            <TabsContent value="weekly" className="mt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {getMemesToRender('weekly').map((meme, index) => (
+                {memes?.map((meme, index) => (
                   <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
                 ))}
               </div>
             </TabsContent>
 
-            <TabsContent value="allTime">
+            <TabsContent value="allTime" className="mt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {getMemesToRender('allTime').map((meme, index) => (
+                {memes?.map((meme, index) => (
                   <TrendingMemeCard key={meme.id} meme={meme} rank={index + 1} />
                 ))}
               </div>
@@ -223,19 +84,7 @@ const TrendingMemes = ({ limit = 3 }: TrendingMemesProps) => {
 };
 
 interface TrendingMemeCardProps {
-  meme: {
-    id: string;
-    title: string;
-    imageUrl: string;
-    voteCount: number;
-    commentCount: number;
-    creator: {
-      id: string;
-      username: string;
-      avatar: string;
-    };
-    createdAt: string;
-  };
+  meme: any;
   rank: number;
 }
 
@@ -245,7 +94,7 @@ const TrendingMemeCard = ({ meme, rank }: TrendingMemeCardProps) => {
       <div className="relative">
         <Link to={`/meme/${meme.id}`}>
           <img 
-            src={meme.imageUrl} 
+            src={meme.image_url} 
             alt={meme.title} 
             className="w-full h-40 object-cover"
           />
@@ -265,14 +114,14 @@ const TrendingMemeCard = ({ meme, rank }: TrendingMemeCardProps) => {
         </CardTitle>
         <CardDescription className="flex items-center text-xs space-x-1">
           <Avatar className="h-4 w-4 mr-1">
-            <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${meme.creator.username}`} />
+            <AvatarImage src={meme.creator.avatar} />
             <AvatarFallback className="text-[8px]">
               {meme.creator.username.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <span>{meme.creator.username}</span>
           <span>•</span>
-          <span>{new Date(meme.createdAt).toLocaleDateString()}</span>
+          <span>{new Date(meme.created_at).toLocaleDateString()}</span>
         </CardDescription>
       </CardHeader>
       
@@ -280,11 +129,11 @@ const TrendingMemeCard = ({ meme, rank }: TrendingMemeCardProps) => {
         <div className="flex items-center space-x-3 text-sm">
           <div className="flex items-center">
             <Heart className="h-3 w-3 mr-1" />
-            <span className="text-xs">{meme.voteCount}</span>
+            <span className="text-xs">{meme.vote_count}</span>
           </div>
           <div className="flex items-center">
             <MessageSquare className="h-3 w-3 mr-1" />
-            <span className="text-xs">{meme.commentCount}</span>
+            <span className="text-xs">{meme.comment_count}</span>
           </div>
         </div>
       </CardFooter>
