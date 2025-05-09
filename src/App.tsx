@@ -11,6 +11,7 @@ import ProfileSettings from "./pages/ProfileSettings";
 import NotFound from "./pages/NotFound";
 import MemeCreationStudio from "./pages/MemeCreationStudio";
 import CreatorDashboard from "./pages/CreatorDashboard";
+import DraftDashboard from "./pages/DraftDashboard";
 import MemePage from "./pages/MemePage";
 import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
@@ -31,7 +32,9 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/browse" element={<Index />} />
               <Route path="/create" element={<MemeCreationStudio />} />
+              <Route path="/create/draft/:draftId" element={<MemeCreationStudio />} />
               <Route path="/creator" element={<CreatorDashboard />} />
+              <Route path="/drafts" element={<DraftDashboard />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/settings" element={<ProfileSettings />} />
               <Route path="/meme/:id" element={<MemePage />} />

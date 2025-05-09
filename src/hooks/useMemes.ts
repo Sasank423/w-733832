@@ -14,7 +14,7 @@ export const useFeaturedMeme = () => {
           *,
           creator:profiles(id, username, avatar, created_at, updated_at)
         `)
-        .eq('is_meme_of_day', true)
+        .eq('is_weekly_champion', true)
         .limit(1)
         .single();
       
@@ -23,7 +23,7 @@ export const useFeaturedMeme = () => {
       }
       
       if (!data) {
-        // If no meme of the day, get highest voted
+        // If no weekly champion, get highest voted
         const { data: topMeme, error: topError } = await supabase
           .from('memes')
           .select(`
@@ -38,12 +38,63 @@ export const useFeaturedMeme = () => {
           throw topError;
         }
         
-        return topMeme || null;
+        // Ensure the returned data conforms to the Meme interface
+        if (topMeme) {
+          return {
+            ...topMeme,
+            dislike_count: 'dislike_count' in topMeme ? topMeme.dislike_count : 0
+          } as Meme;
+        }
+        
+        return null;
       }
       
-      return data;
+      // Ensure the returned data conforms to the Meme interface
+      return {
+        ...data,
+        dislike_count: 'dislike_count' in data ? data.dislike_count : 0
+      } as Meme;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useMemeOfTheDay = () => {
+  return useQuery({
+    queryKey: ['meme-of-the-day'],
+    queryFn: async (): Promise<Meme | null> => {
+      // Calculate 24 hours ago from the current time
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+      
+      // Get the meme with the highest vote count in the last 24 hours
+      const { data, error } = await supabase
+        .from('memes')
+        .select(`
+          *,
+          creator:profiles(id, username, avatar, created_at, updated_at)
+        `)
+        .gte('created_at', twentyFourHoursAgo.toISOString())
+        .order('vote_count', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+      
+      // Ensure the returned data conforms to the Meme interface
+      if (data) {
+        // Make sure dislike_count is included (required by Meme interface)
+        return {
+          ...data,
+          dislike_count: 'dislike_count' in data ? data.dislike_count : 0
+        } as Meme;
+      }
+      
+      return null;
+    },
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 };
 
@@ -84,7 +135,12 @@ export const useTrendingMemes = (category: 'rising' | 'weekly' | 'allTime', limi
       const { data, error } = await query;
       
       if (error) throw error;
-      return data || [];
+      
+      // Ensure all items have the required properties for the Meme interface
+      return (data || []).map(item => ({
+        ...item,
+        dislike_count: 'dislike_count' in item ? item.dislike_count : 0
+      })) as Meme[];
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -133,8 +189,14 @@ export const useMemeFeed = (filter: string, page: number = 1, limit: number = 10
       
       const hasMore = countError ? false : (count ? count > (page * limit) : false);
       
+      // Ensure all items have the required properties for the Meme interface
+      const memes = (data || []).map(item => ({
+        ...item,
+        dislike_count: 'dislike_count' in item ? item.dislike_count : 0
+      })) as Meme[];
+      
       return { 
-        memes: data || [],
+        memes,
         hasMore 
       };
     },

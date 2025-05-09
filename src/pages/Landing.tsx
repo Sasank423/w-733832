@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 import Layout from '@/components/layout/Layout';
 import FeaturedMeme from '@/components/meme/FeaturedMeme';
 import TrendingMemes from '@/components/meme/TrendingMemes';
-import { useFeaturedMeme } from '@/hooks/useMemes';
+import { useFeaturedMeme, useMemeOfTheDay } from '@/hooks/useMemes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 const Landing = () => {
-  const { data: featuredMeme, isLoading: isLoadingFeatured } = useFeaturedMeme();
+  const { data: weeklyChampion, isLoading: isLoadingWeekly } = useFeaturedMeme();
+  const { data: memeOfTheDay, isLoading: isLoadingMemeOfDay } = useMemeOfTheDay();
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
 
@@ -51,19 +52,43 @@ const Landing = () => {
           </div>
         </div>
         
-        {/* Featured Meme */}
+        {/* Meme of the Day */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Featured Meme</h2>
+          <h2 className="text-2xl font-bold mb-6">Meme of the Day</h2>
           
-          {isLoadingFeatured ? (
+          {isLoadingMemeOfDay ? (
             <div className="rounded-xl overflow-hidden">
               <Skeleton className="w-full h-64 md:h-96" />
             </div>
-          ) : featuredMeme ? (
-            <FeaturedMeme meme={featuredMeme as any} />
+          ) : memeOfTheDay ? (
+            <FeaturedMeme meme={{...memeOfTheDay, is_meme_of_day: true}} />
           ) : (
             <div className="text-center p-12 border rounded-lg">
-              <p className="text-gray-500">No featured memes yet. Be the first to create one!</p>
+              <p className="text-gray-500">No meme of the day yet. Check back at noon for the highest voted meme!</p>
+              <Button className="mt-4" asChild title={!isAuthenticated ? 'Log in to create memes' : ''}>
+                <Link
+                  to="/browse"
+                >
+                  Browse Memes
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        {/* Weekly Champion */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6">Weekly Champion</h2>
+          
+          {isLoadingWeekly ? (
+            <div className="rounded-xl overflow-hidden">
+              <Skeleton className="w-full h-64 md:h-96" />
+            </div>
+          ) : weeklyChampion ? (
+            <FeaturedMeme meme={{...weeklyChampion, is_weekly_champion: true}} />
+          ) : (
+            <div className="text-center p-12 border rounded-lg">
+              <p className="text-gray-500">No weekly champion yet. Keep voting for your favorite memes!</p>
               <Button className="mt-4" asChild title={!isAuthenticated ? 'Log in to create memes' : ''}>
                 <Link
                   to={isAuthenticated ? "/create" : "#"}
@@ -77,8 +102,6 @@ const Landing = () => {
             </div>
           )}
         </div>
-        
-        {/* Trending Memes block removed */}
       </section>
     </Layout>
   );

@@ -65,7 +65,9 @@ const FeaturedMeme = ({ meme }: FeaturedMemeProps) => {
             </div>
             
             <div className="flex justify-between items-center">
-              <Button disabled>View Meme</Button>
+              <Button asChild>
+                <Link to={`/meme/${meme.id}`}>View Meme</Link>
+              </Button>
               
               <Button 
                 variant="ghost" 

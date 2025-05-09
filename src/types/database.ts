@@ -82,3 +82,32 @@ export interface MockMemeFormat {
   };
   description?: string;
 }
+
+// Interface for draggable text caption in meme drafts
+export interface DraggableCaption {
+  id: string;
+  text: string;
+  position: { x: number; y: number };
+  fontSize?: number;
+  color?: string;
+  fontFamily?: string;
+}
+
+// Interface for meme drafts stored in the database
+export interface MemeDraftDB {
+  id: string;
+  user_id: string;
+  title: string;
+  template_id?: string;
+  image_urls: string[];
+  text_captions: DraggableCaption[];
+  text_color: string;
+  font_size: number;
+  font_family: string;
+  text_shadow: boolean;
+  filter_brightness: number;
+  filter_contrast: number;
+  filter_saturation: number;
+  created_at: string;
+  updated_at: string;
+}

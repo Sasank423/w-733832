@@ -88,6 +88,9 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/create">Create</Link>
                 </Button>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/drafts">My Drafts</Link>
+                </Button>
                 <NotificationCenter />
                 <UserMenu />
               </>
@@ -140,6 +143,9 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
               <>
                 <Link to="/create" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Create
+                </Link>
+                <Link to="/drafts" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
+                  My Drafts
                 </Link>
                 <Link to="/notifications" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Notifications

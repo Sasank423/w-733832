@@ -31,6 +31,7 @@ const HomePage = () => {
   const voteMutation = useVoteMutation();
   const addCommentMutation = useAddCommentMutation();
   const userVote = useUserVote(selectedMeme);
+  const commentsSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
   // Fetch memes from Supabase
   const fetchMemes = useCallback(async (reset = false) => {
@@ -199,6 +200,32 @@ const HomePage = () => {
     setSelectedMeme(selectedMeme === memeId ? null : memeId);
   };
 
+  // Set up real-time subscription for comments
+  useEffect(() => {
+    // Subscribe to changes on the comments table
+    const subscription = supabase
+      .channel('comments-channel-browse')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'comments'
+      }, (payload) => {
+        // When a comment is added, updated, or deleted, invalidate the meme-feed query
+        // This will cause React Query to refetch the data and update the UI
+        queryClient.invalidateQueries({ queryKey: ['meme-feed'] });
+      })
+      .subscribe();
+    
+    commentsSubscriptionRef.current = subscription;
+    
+    return () => {
+      // Clean up subscription when component unmounts
+      if (commentsSubscriptionRef.current) {
+        commentsSubscriptionRef.current.unsubscribe();
+      }
+    };
+  }, [queryClient]);
+  
   // Invalidate meme-feed after a comment is added
   useEffect(() => {
     if (addCommentMutation.isSuccess) {

@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { StudioLayout } from '@/components/studio/StudioLayout';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from '@/components/ui/sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useDrafts } from '@/hooks/useDrafts';
+import DraftManager from '@/components/studio/DraftManager';
 
 // Define draggable text caption structure
 interface DraggableCaption {
@@ -61,15 +64,62 @@ const MemeCreationStudio = () => {
     },
   });
 
+  // Load draft from URL parameter if available
+  const { draftId } = useParams<{ draftId: string }>();
+  const { drafts, saveDraft: saveDraftToSupabase, isLoading: isDraftsLoading } = useDrafts();
+  const { user } = useAuth();
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedRef = useRef<Date | null>(null);
+  
+  // Load draft from URL parameter or localStorage on initial load
+  useEffect(() => {
+    const loadInitialDraft = async () => {
+      // If we have a draftId in the URL, try to load that specific draft
+      if (draftId && user) {
+        const draftToLoad = drafts.find(d => d.id === draftId);
+        if (draftToLoad) {
+          setMeme(draftToLoad);
+          lastSavedRef.current = draftToLoad.lastSaved;
+          return;
+        }
+      }
+      
+      // Otherwise, try to load from localStorage
+      const savedDraft = localStorage.getItem('meme-draft');
+      if (savedDraft) {
+        try {
+          const parsedDraft = JSON.parse(savedDraft) as MemeDraft;
+          setMeme(parsedDraft);
+          if (parsedDraft.lastSaved) {
+            lastSavedRef.current = new Date(parsedDraft.lastSaved);
+          }
+        } catch (error) {
+          console.error('Error parsing saved draft:', error);
+        }
+      }
+    };
+    
+    loadInitialDraft();
+  }, [draftId, drafts, user]);
+  
   // Auto-save functionality
   useEffect(() => {
+    // Clear any existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
     if (meme.imageUrls && meme.imageUrls.length > 0) {
-      const autosaveTimer = setTimeout(() => {
+      autoSaveTimerRef.current = setTimeout(() => {
         handleAutoSave();
       }, 30000); // Auto-save every 30 seconds
-
-      return () => clearTimeout(autosaveTimer);
     }
+    
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
   }, [meme]);
 
   // Handle updates to the meme state
@@ -110,14 +160,30 @@ const MemeCreationStudio = () => {
   };
 
   // Auto-save the meme draft
-  const handleAutoSave = () => {
-    // In a real app, this would save to a backend
-    localStorage.setItem('meme-draft', JSON.stringify({ ...meme, lastSaved: new Date() }));
-    console.log('Auto-saved draft');
+  const handleAutoSave = async () => {
+    // Always save to localStorage for quick recovery
+    const now = new Date();
+    localStorage.setItem('meme-draft', JSON.stringify({ ...meme, lastSaved: now }));
+    lastSavedRef.current = now;
+    
+    // If user is authenticated, also save to Supabase silently
+    if (user && meme.imageUrls && meme.imageUrls.length > 0) {
+      try {
+        // Use the first caption as the title, or 'Untitled Draft' if none
+        const title = meme.textCaptions.length > 0 
+          ? meme.textCaptions[0].text.substring(0, 50) 
+          : 'Untitled Draft';
+          
+        await saveDraftToSupabase(meme, title, meme.id);
+        console.log('Auto-saved draft to Supabase');
+      } catch (error) {
+        console.error('Error auto-saving to Supabase:', error);
+      }
+    }
   };
 
   // Save the meme draft with user confirmation
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (!isAuthenticated) {
       shadowToast({
         title: 'Authentication required',
@@ -127,10 +193,50 @@ const MemeCreationStudio = () => {
       return;
     }
     
-    // In a real app, this would save to a backend
-    localStorage.setItem('meme-draft', JSON.stringify({ ...meme, lastSaved: new Date() }));
-    toast('Draft saved', {
-      description: 'Your meme has been saved to drafts.',
+    // Always save to localStorage
+    const now = new Date();
+    localStorage.setItem('meme-draft', JSON.stringify({ ...meme, lastSaved: now }));
+    lastSavedRef.current = now;
+    
+    // Save to Supabase if there's content to save
+    if (meme.imageUrls && meme.imageUrls.length > 0) {
+      try {
+        // Generate a title from the first caption or use default
+        const title = meme.textCaptions.length > 0 
+          ? meme.textCaptions[0].text.substring(0, 50) 
+          : 'Untitled Draft';
+          
+        const savedDraft = await saveDraftToSupabase(meme, title, meme.id);
+        if (savedDraft && savedDraft.id) {
+          // Update the meme ID if this was a new draft
+          if (!meme.id) {
+            setMeme(prev => ({ ...prev, id: savedDraft.id }));
+          }
+          
+          toast('Draft saved', {
+            description: 'Your meme has been saved to drafts.',
+          });
+        }
+      } catch (error) {
+        console.error('Error saving draft to Supabase:', error);
+        shadowToast({
+          title: 'Error saving to cloud',
+          description: 'Your draft was saved locally but not to the cloud. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } else {
+      toast('Draft saved locally', {
+        description: 'Add an image to save your draft to the cloud.',
+      });
+    }
+  };
+  
+  // Load a draft from the drafts manager
+  const handleLoadDraft = (draft: MemeDraft) => {
+    setMeme(draft);
+    toast('Draft loaded', {
+      description: 'Your saved draft has been loaded.',
     });
   };
 
@@ -194,18 +300,26 @@ const MemeCreationStudio = () => {
       // Draw the image
       ctx.drawImage(img, 0, 0);
 
-      // Configure text style
-      ctx.fillStyle = meme.textColor;
+      // Set default text style
       ctx.strokeStyle = 'black';
       ctx.lineWidth = meme.fontSize / 10;
       ctx.textAlign = 'center';
-      ctx.font = `bold ${meme.fontSize}px ${meme.fontFamily}`;
 
       // Draw captions
       meme.textCaptions.forEach(caption => {
+        // Get position
         const x = (canvas.width * caption.position.x) / 100;
         const y = (canvas.height * caption.position.y) / 100;
         
+        // Set font size and family (use caption-specific values if available)
+        const fontSize = caption.fontSize || meme.fontSize;
+        const fontFamily = caption.fontFamily || meme.fontFamily;
+        ctx.font = `bold ${fontSize}px ${fontFamily}`;
+        
+        // Set text color (use caption-specific color if available)
+        ctx.fillStyle = caption.color || meme.textColor;
+        
+        // Draw text with shadow if enabled
         if (meme.textShadow) {
           ctx.strokeText(caption.text, x, y);
         }
@@ -275,7 +389,16 @@ const MemeCreationStudio = () => {
   return (
     <Layout>
       <div className="container mx-auto py-6">
-        <h1 className="text-2xl font-bold mb-6">Create Your Meme</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Create Your Meme</h1>
+          <div className="flex gap-2">
+            <DraftManager
+              currentDraft={meme}
+              onLoadDraft={handleLoadDraft}
+              onSaveDraft={(draft, title, draftId) => saveDraftToSupabase(draft, title, draftId)}
+            />
+          </div>
+        </div>
         
         <StudioLayout 
           meme={meme}
@@ -288,6 +411,12 @@ const MemeCreationStudio = () => {
           currentImageIndex={currentImageIndex}
           onChangeImage={setCurrentImageIndex}
         />
+        
+        {lastSavedRef.current && (
+          <div className="text-sm text-muted-foreground mt-4 text-center">
+            Last saved: {lastSavedRef.current.toLocaleTimeString()}
+          </div>
+        )}
       </div>
     </Layout>
   );

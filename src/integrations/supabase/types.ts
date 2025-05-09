@@ -51,6 +51,68 @@ export type Database = {
           },
         ]
       }
+      meme_drafts: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          template_id: string | null
+          image_urls: string[]
+          text_captions: Json
+          text_color: string
+          font_size: number
+          font_family: string
+          text_shadow: boolean
+          filter_brightness: number
+          filter_contrast: number
+          filter_saturation: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title?: string
+          template_id?: string | null
+          image_urls?: string[]
+          text_captions?: Json
+          text_color?: string
+          font_size?: number
+          font_family?: string
+          text_shadow?: boolean
+          filter_brightness?: number
+          filter_contrast?: number
+          filter_saturation?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          template_id?: string | null
+          image_urls?: string[]
+          text_captions?: Json
+          text_color?: string
+          font_size?: number
+          font_family?: string
+          text_shadow?: boolean
+          filter_brightness?: number
+          filter_contrast?: number
+          filter_saturation?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meme_drafts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       meme_tags: {
         Row: {
           meme_id: string
@@ -199,6 +261,7 @@ export type Database = {
           value?: number
         }
         Relationships: [
+
           {
             foreignKeyName: "votes_meme_id_fkey"
             columns: ["meme_id"]
