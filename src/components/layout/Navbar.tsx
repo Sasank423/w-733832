@@ -1,16 +1,23 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu, Search, Moon, Sun } from "lucide-react";
 import UserMenu from "@/components/user/UserMenu";
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/auth/AuthModal';
 import NotificationCenter from '@/components/user/NotificationCenter';
+import { useTheme } from '@/hooks/useTheme';
 
-const Navbar = () => {
+interface NavbarProps {
+  isCollapsed: boolean;
+  toggleCollapse: () => void;
+}
+
+const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
   const { user, isAuthenticated } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -21,8 +28,16 @@ const Navbar = () => {
     setIsAuthModalOpen(true);
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  const navbarClasses = isCollapsed
+    ? 'w-0 md:w-16 overflow-hidden transition-all duration-300'
+    : 'w-full md:w-full transition-all duration-300';
+
   return (
-    <nav className="border-b bg-white dark:bg-gray-900 sticky top-0 z-30">
+    <nav className={`border-b bg-background sticky top-0 z-30 ${navbarClasses}`}>
       <div className="container-layout py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -49,6 +64,15 @@ const Navbar = () => {
 
           {/* Navigation Links - Desktop */}
           <div className="hidden md:flex items-center space-x-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="mr-2"
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            
             {isAuthenticated ? (
               <>
                 <Button variant="ghost" size="sm" asChild>
@@ -92,18 +116,27 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden pt-2 pb-3 space-y-1 animate-fade-in">
-            <Link to="/create" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="flex items-center w-full justify-start px-3 py-2"
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5 mr-2" /> : <Moon className="h-5 w-5 mr-2" />}
+              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            </Button>
+            <Link to="/create" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
               Create
             </Link>
             {isAuthenticated ? (
               <>
-                <Link to="/notifications" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+                <Link to="/notifications" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Notifications
                 </Link>
-                <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+                <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Dashboard
                 </Link>
-                <Link to="/settings" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+                <Link to="/settings" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Settings
                 </Link>
                 <Button 
