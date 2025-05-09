@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import Layout from '@/components/layout/Layout';
 import FeaturedMeme from '@/components/meme/FeaturedMeme';
 import TrendingMemes from '@/components/meme/TrendingMemes';
-import SupabaseTest from '@/components/SupabaseTest';
 
 // Mock featured meme data
 const featuredMeme = {
@@ -39,11 +38,6 @@ const Landing = () => {
               <Link to="/create">Create a Meme</Link>
             </Button>
           </div>
-        </div>
-        
-        {/* Supabase Connection Test */}
-        <div className="mb-12 max-w-md mx-auto">
-          <SupabaseTest />
         </div>
         
         {/* Featured Meme */}
