@@ -58,14 +58,14 @@ const Landing = () => {
           
           {isLoadingMemeOfDay ? (
             <div className="rounded-xl overflow-hidden">
-              <Skeleton className="w-full h-64 md:h-96" />
+              <Skeleton className="w-full h-[50vh] md:h-[70vh]" style={{ minHeight: '400px' }} />
             </div>
           ) : memeOfTheDay ? (
             <FeaturedMeme meme={{...memeOfTheDay, is_meme_of_day: true}} />
           ) : (
-            <div className="text-center p-12 border rounded-lg">
-              <p className="text-gray-500">No meme of the day yet. Check back at noon for the highest voted meme!</p>
-              <Button className="mt-4" asChild title={!isAuthenticated ? 'Log in to create memes' : ''}>
+            <div className="text-center p-6 border rounded-lg">
+              <p className="text-gray-500 text-sm">No meme of the day yet. Check back at noon for the highest voted meme!</p>
+              <Button className="mt-3" size="sm" asChild title={!isAuthenticated ? 'Log in to create memes' : ''}>
                 <Link
                   to="/browse"
                 >
@@ -82,14 +82,14 @@ const Landing = () => {
           
           {isLoadingWeekly ? (
             <div className="rounded-xl overflow-hidden">
-              <Skeleton className="w-full h-64 md:h-96" />
+              <Skeleton className="w-full h-[50vh] md:h-[70vh]" style={{ minHeight: '400px' }} />
             </div>
           ) : weeklyChampion ? (
             <FeaturedMeme meme={{...weeklyChampion, is_weekly_champion: true}} />
           ) : (
-            <div className="text-center p-12 border rounded-lg">
-              <p className="text-gray-500">No weekly champion yet. Keep voting for your favorite memes!</p>
-              <Button className="mt-4" asChild title={!isAuthenticated ? 'Log in to create memes' : ''}>
+            <div className="text-center p-6 border rounded-lg">
+              <p className="text-gray-500 text-sm">No weekly champion yet. Keep voting for your favorite memes!</p>
+              <Button className="mt-3" size="sm" asChild title={!isAuthenticated ? 'Log in to create memes' : ''}>
                 <Link
                   to={isAuthenticated ? "/create" : "#"}
                   tabIndex={!isAuthenticated ? -1 : 0}

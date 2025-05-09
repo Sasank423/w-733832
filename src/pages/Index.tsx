@@ -30,7 +30,8 @@ const HomePage = () => {
   const queryClient = useQueryClient();
   const voteMutation = useVoteMutation();
   const addCommentMutation = useAddCommentMutation();
-  const userVote = useUserVote(selectedMeme);
+  // Track user votes for each meme
+  const [userVotes, setUserVotes] = useState<Record<string, number>>({});
   const commentsSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
   // Fetch memes from Supabase
@@ -125,6 +126,29 @@ const HomePage = () => {
     // This will trigger the useEffect that calls fetchMemes(true)
   };
 
+  // Load user votes when component mounts or user changes
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const fetchUserVotes = async () => {
+        const { data, error } = await supabase
+          .from('votes')
+          .select('meme_id, value')
+          .eq('user_id', user.id);
+          
+        if (!error && data) {
+          // Create a map of meme_id -> vote value
+          const votesMap: Record<string, number> = {};
+          data.forEach(vote => {
+            votesMap[vote.meme_id] = vote.value;
+          });
+          setUserVotes(votesMap);
+        }
+      };
+      
+      fetchUserVotes();
+    }
+  }, [isAuthenticated, user]);
+  
   const handleVote = async (memeId: string, value: number) => {
     if (!isAuthenticated) {
       toast({
@@ -176,6 +200,13 @@ const HomePage = () => {
           if (value === 1) vote_count--;
           else dislike_count--;
           console.log('Removed vote. New counts:', { vote_count, dislike_count });
+          
+          // Update local state to remove vote
+          setUserVotes(prev => {
+            const newVotes = { ...prev };
+            delete newVotes[memeId];
+            return newVotes;
+          });
         } else {
           // Switch vote
           const { error: updateVoteError } = await supabase.from('votes').update({ value }).eq('id', voteData.id);
@@ -191,6 +222,12 @@ const HomePage = () => {
             dislike_count++;
           }
           console.log('Switched vote. New counts:', { vote_count, dislike_count });
+          
+          // Update local state with new vote value
+          setUserVotes(prev => ({
+            ...prev,
+            [memeId]: value
+          }));
         }
       } else {
         // New vote
@@ -202,6 +239,12 @@ const HomePage = () => {
         if (value === 1) vote_count++;
         else dislike_count++;
         console.log('Inserted new vote. New counts:', { vote_count, dislike_count });
+        
+        // Update local state with new vote
+        setUserVotes(prev => ({
+          ...prev,
+          [memeId]: value
+        }));
       }
 
       // 4. Update memes table
@@ -372,15 +415,22 @@ const HomePage = () => {
                                 variant="ghost" 
                                 size="sm" 
                                 disabled={!isAuthenticated} 
-                                className={`px-2 rounded-none ${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVote.data?.value === 1 ? 'text-blue-500 bg-blue-50 dark:bg-blue-950/20' : ''}`}
+                                className={`px-2 rounded-none transition-colors duration-200 ${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVotes[meme.id] === 1 ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 font-medium' : 'hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400'}`}
                                 onClick={() => handleVote(meme.id, 1)}
                               >
                                 <motion.div
-                                  whileTap={{ scale: 1.3 }}
-                                  transition={{ type: 'spring', stiffness: 300 }}
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  animate={userVotes[meme.id] === 1 ? { y: [0, -5, 0], scale: [1, 1.2, 1] } : {}}
+                                  transition={{ 
+                                    type: 'spring', 
+                                    stiffness: 400, 
+                                    damping: 10,
+                                    duration: 0.3
+                                  }}
                                   className="flex items-center"
                                 >
-                                  <ThumbsUp className={`mr-1 h-4 w-4 ${userVote.data?.value === 1 ? 'fill-current' : ''}`} />
+                                  <ThumbsUp className={`mr-1 h-4 w-4 transition-colors duration-200 ${userVotes[meme.id] === 1 ? 'fill-current' : ''}`} />
                                 </motion.div>
                               </Button>
                               <div className="px-2 bg-muted/50 text-sm font-medium">{meme.vote_count}</div>
@@ -392,15 +442,22 @@ const HomePage = () => {
                                 variant="ghost" 
                                 size="sm" 
                                 disabled={!isAuthenticated} 
-                                className={`px-2 rounded-none ${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVote.data?.value === -1 ? 'text-red-500 bg-red-50 dark:bg-red-950/20' : ''}`}
+                                className={`px-2 rounded-none transition-colors duration-200 ${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVotes[meme.id] === -1 ? 'text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 font-medium' : 'hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'}`}
                                 onClick={() => handleVote(meme.id, -1)}
                               >
                                 <motion.div
-                                  whileTap={{ scale: 1.3 }}
-                                  transition={{ type: 'spring', stiffness: 300 }}
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  animate={userVotes[meme.id] === -1 ? { y: [0, 5, 0], scale: [1, 1.2, 1] } : {}}
+                                  transition={{ 
+                                    type: 'spring', 
+                                    stiffness: 400, 
+                                    damping: 10,
+                                    duration: 0.3
+                                  }}
                                   className="flex items-center"
                                 >
-                                  <ThumbsUp className={`mr-1 h-4 w-4 rotate-180 ${userVote.data?.value === -1 ? 'fill-current' : ''}`} />
+                                  <ThumbsUp className={`mr-1 h-4 w-4 rotate-180 transition-colors duration-200 ${userVotes[meme.id] === -1 ? 'fill-current' : ''}`} />
                                 </motion.div>
                               </Button>
                               <div className="px-2 bg-muted/50 text-sm font-medium">{meme.dislike_count}</div>
