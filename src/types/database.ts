@@ -21,6 +21,8 @@ export interface Meme {
   comment_count: number;
   is_meme_of_day: boolean;
   is_weekly_champion: boolean;
+  creator?: Profile;
+  tags?: MemeTag[];
 }
 
 export interface Tag {
@@ -31,6 +33,7 @@ export interface Tag {
 export interface MemeTag {
   meme_id: string;
   tag_id: string;
+  tags?: Tag;
 }
 
 export interface Vote {
@@ -48,4 +51,12 @@ export interface Comment {
   text: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserWithProfile {
+  id: string;
+  email?: string;
+  username: string;
+  avatar?: string;
+  bio?: string;
 }

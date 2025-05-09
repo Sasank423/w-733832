@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from '@/components/ui/motion';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { UserWithProfile } from '@/types/database';
 
 // Mock comments data - same as in CommentSection.tsx
 const MOCK_COMMENTS = [
@@ -55,7 +56,7 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [remainingChars, setRemainingChars] = useState(140);
-  const { user, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   
@@ -98,8 +99,8 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
         createdAt: new Date().toISOString(),
         user: {
           id: user?.id || '',
-          username: user?.username || '',
-          avatar: user?.avatar || '',
+          username: profile?.username || '',
+          avatar: profile?.avatar || '',
         },
       };
       

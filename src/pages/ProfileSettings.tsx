@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,19 +29,19 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const ProfileSettings = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const [isProfileUpdating, setIsProfileUpdating] = useState(false);
   const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(user?.avatar);
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(profile?.avatar);
   const { toast } = useToast();
   
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      username: user?.username || '',
+      username: profile?.username || '',
       email: user?.email || '',
-      bio: user?.bio || '',
+      bio: profile?.bio || '',
     },
   });
   
@@ -154,7 +153,7 @@ const ProfileSettings = () => {
                   <Avatar className="h-24 w-24 mb-4">
                     <AvatarImage src={avatarPreview} />
                     <AvatarFallback className="bg-brand-purple text-white text-xl">
-                      {user?.username?.charAt(0).toUpperCase() || 'U'}
+                      {profile?.username?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   

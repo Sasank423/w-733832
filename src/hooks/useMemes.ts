@@ -149,8 +149,14 @@ export const useMeme = (id: string | undefined) => {
     queryFn: async (): Promise<Meme | null> => {
       if (!id) return null;
       
-      // Update view count in a separate call
-      await supabase.rpc('increment_view_count', { meme_id: id });
+      // Update view count using the edge function
+      try {
+        await supabase.functions.invoke('increment_view_count', {
+          body: { memeId: id }
+        });
+      } catch (error) {
+        console.error('Failed to increment view count:', error);
+      }
       
       const { data, error } = await supabase
         .from('memes')
