@@ -16,7 +16,7 @@ interface NavbarProps {
 }
 
 const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
-  const { user, profile, isAuthenticated } = useAuth();
+  const { isAuthenticated, profile } = useAuth();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -73,7 +73,7 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
                   <Link to="/create">Create</Link>
                 </Button>
                 <NotificationCenter />
-                <UserMenu user={profile} />
+                <UserMenu />
               </>
             ) : (
               <>

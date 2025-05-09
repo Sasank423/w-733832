@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -58,38 +59,47 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Set up auth state listener
   useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_OUT') {
-          setProfile(null);
-        } else if (session?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
-          // Defer profile fetch to avoid Supabase deadlocks
-          setTimeout(() => {
-            refreshProfile();
-          }, 0);
+      async (event, session) => {
+        if (mounted) {
+          console.log('Auth state changed:', event);
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (event === 'SIGNED_OUT') {
+            setProfile(null);
+          } else if (session?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+            // Defer profile fetch to avoid Supabase deadlocks
+            setTimeout(() => {
+              if (mounted) refreshProfile();
+            }, 0);
+          }
         }
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Defer profile fetch to avoid Supabase deadlocks
-        setTimeout(() => {
-          refreshProfile();
-        }, 0);
+      if (mounted) {
+        console.log('Initial session check:', session ? 'Session found' : 'No session');
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Defer profile fetch to avoid Supabase deadlocks
+          setTimeout(() => {
+            if (mounted) refreshProfile();
+          }, 0);
+        }
+        
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -162,26 +172,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: "Logout failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      navigate('/');
+      
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error: any) {
       toast({
         title: "Logout failed",
         description: error.message,
         variant: "destructive",
       });
-      return;
     }
-    
-    setUser(null);
-    setProfile(null);
-    setSession(null);
-    navigate('/');
-    
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
