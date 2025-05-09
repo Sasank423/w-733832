@@ -267,14 +267,14 @@ const UserDashboard = () => {
                         <div>
                           <div className="flex items-center mb-4">
                             <Avatar className="h-8 w-8 mr-2">
-                              <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${MOCK_WEEKLY_CHAMPION.creator.username}`} />
+                              <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${MOCK_WEEKLY_CHAMPION.creator?.username}`} />
                               <AvatarFallback className="bg-amber-500 text-white">
-                                {MOCK_WEEKLY_CHAMPION.creator.username.charAt(0).toUpperCase()}
+                                {MOCK_WEEKLY_CHAMPION.creator?.username.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <Link to={`/user/${MOCK_WEEKLY_CHAMPION.creator.id}`} className="text-sm font-medium hover:text-amber-500">
-                                {MOCK_WEEKLY_CHAMPION.creator.username}
+                              <Link to={`/user/${MOCK_WEEKLY_CHAMPION.creator?.id}`} className="text-sm font-medium hover:text-amber-500">
+                                {MOCK_WEEKLY_CHAMPION.creator?.username}
                               </Link>
                               <p className="text-xs text-gray-500">{MOCK_WEEKLY_CHAMPION.vote_count} votes</p>
                             </div>
@@ -381,23 +381,18 @@ const UserDashboard = () => {
                         meme={{ 
                           id: meme.id, 
                           title: meme.title, 
-                          image_url: meme.imageUrl, 
-                          description: meme.description || null, 
-                          created_at: meme.createdAt, 
-                          updated_at: meme.createdAt, 
-                          vote_count: meme.voteCount, 
-                          view_count: meme.stats?.views || 0, 
-                          comment_count: meme.stats?.comments || 0, 
-                          creator_id: meme.creator.id, 
-                          is_meme_of_day: !!meme.isMemeOfTheDay, 
-                          is_weekly_champion: !!meme.isWeeklyChampion,
+                          imageUrl: meme.imageUrl,
+                          createdAt: meme.createdAt, 
+                          voteCount: meme.voteCount, 
                           creator: {
                             id: meme.creator.id,
                             username: meme.creator.username,
-                            avatar: meme.creator.avatar,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                          }
+                            avatar: meme.creator.avatar
+                          },
+                          isFeatured: meme.isFeatured,
+                          isMemeOfTheDay: meme.isMemeOfTheDay,
+                          isWeeklyChampion: meme.isWeeklyChampion,
+                          stats: meme.stats
                         }}
                       />
                     )}

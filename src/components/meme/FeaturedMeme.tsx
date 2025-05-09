@@ -6,13 +6,7 @@ import { useVoteMutation, useUserVote } from '@/hooks/useMemes';
 import { Meme } from '@/types/database';
 
 interface FeaturedMemeProps {
-  meme: Meme & {
-    creator: {
-      id: string;
-      username: string;
-      avatar?: string;
-    };
-  };
+  meme: Meme;
 }
 
 const FeaturedMeme = ({ meme }: FeaturedMemeProps) => {
@@ -22,6 +16,11 @@ const FeaturedMeme = ({ meme }: FeaturedMemeProps) => {
   const handleVote = () => {
     voteMutation({ memeId: meme.id, value: 1 });
   };
+  
+  // Check if creator exists before rendering
+  if (!meme.creator) {
+    return null;
+  }
   
   return (
     <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-brand-purple/10 to-brand-orange/10 p-1">
