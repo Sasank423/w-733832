@@ -31,7 +31,7 @@ export interface Tag {
 }
 
 export interface MemeTag {
-  meme_id: string;
+  meme_id?: string;
   tag_id: string;
   tags?: Tag;
 }
@@ -59,4 +59,26 @@ export interface UserWithProfile {
   username: string;
   avatar?: string;
   bio?: string;
+}
+
+// Interface to define the mock meme format used in UserDashboard
+export interface MockMemeFormat {
+  id: string;
+  title: string;
+  imageUrl: string;
+  createdAt: string;
+  voteCount: number;
+  creator: {
+    id: string;
+    username: string;
+    avatar?: string;
+  };
+  isFeatured?: boolean;
+  isMemeOfTheDay?: boolean;
+  isWeeklyChampion?: boolean;
+  stats?: {
+    views?: number;
+    comments?: number;
+  };
+  description?: string;
 }

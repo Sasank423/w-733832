@@ -22,71 +22,61 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Meme } from "@/types/database";
+import { Meme, MockMemeFormat } from "@/types/database";
 
 // Mock data for user dashboard - to be replaced with real data
-const MOCK_USER_MEMES = [
+const MOCK_USER_MEMES: MockMemeFormat[] = [
   {
     id: "meme1",
     title: "When the code finally works",
-    image_url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
+    imageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
     description: "That feeling when your code compiles without errors on the first try. A miracle indeed!",
-    created_at: "2023-05-08T12:00:00Z",
-    updated_at: "2023-05-08T12:00:00Z",
-    vote_count: 1562,
-    view_count: 4872,
-    comment_count: 124,
-    creator_id: "user1",
-    is_meme_of_day: true,
-    is_weekly_champion: false,
+    createdAt: "2023-05-08T12:00:00Z",
+    voteCount: 1562,
     creator: {
       id: "user1",
       username: "CodeMaster",
-      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=CodeMaster",
-      created_at: "2023-01-01T00:00:00Z",
-      updated_at: "2023-01-01T00:00:00Z"
+      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=CodeMaster"
+    },
+    isMemeOfTheDay: true,
+    stats: {
+      views: 4872,
+      comments: 124
     }
   },
   {
     id: "meme2",
     title: "Debugging at 2am",
-    image_url: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
+    imageUrl: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
     description: "When you're still hunting that elusive bug in the middle of the night.",
-    created_at: "2023-05-07T10:30:00Z",
-    updated_at: "2023-05-07T10:30:00Z",
-    vote_count: 453,
-    view_count: 1872,
-    comment_count: 42,
-    creator_id: "user2",
-    is_meme_of_day: false,
-    is_weekly_champion: false,
+    createdAt: "2023-05-07T10:30:00Z",
+    voteCount: 453,
     creator: {
       id: "user2",
       username: "NightCoder",
-      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=NightCoder",
-      created_at: "2023-01-01T00:00:00Z",
-      updated_at: "2023-01-01T00:00:00Z"
+      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=NightCoder"
+    },
+    stats: {
+      views: 1872,
+      comments: 42
     }
   },
   {
     id: "meme3",
     title: "Monday mornings be like",
-    image_url: "https://images.unsplash.com/photo-1501854140801-50d01698950b",
+    imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b",
     description: "That moment when your alarm goes off and reality hits.",
-    created_at: "2023-05-06T09:15:00Z",
-    updated_at: "2023-05-06T09:15:00Z",
-    vote_count: 287,
-    view_count: 972,
-    comment_count: 28,
-    creator_id: "user3",
-    is_meme_of_day: false,
-    is_weekly_champion: true,
+    createdAt: "2023-05-06T09:15:00Z",
+    voteCount: 287,
     creator: {
       id: "user3",
       username: "CoffeeAddict",
-      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=CoffeeAddict",
-      created_at: "2023-01-01T00:00:00Z",
-      updated_at: "2023-01-01T00:00:00Z"
+      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=CoffeeAddict"
+    },
+    isWeeklyChampion: true,
+    stats: {
+      views: 972,
+      comments: 28
     }
   }
 ];
@@ -165,13 +155,13 @@ const UserDashboard = () => {
   useEffect(() => {
     // In a real app, you'd fetch the user's memes based on the sort option
     if (sortOption === "popular") {
-      setMemes([...MOCK_USER_MEMES].sort((a, b) => b.vote_count - a.vote_count));
+      setMemes([...MOCK_USER_MEMES].sort((a, b) => b.voteCount - a.voteCount));
     } else if (sortOption === "commented") {
-      setMemes([...MOCK_USER_MEMES].sort((a, b) => (b.comment_count || 0) - (a.comment_count || 0)));
+      setMemes([...MOCK_USER_MEMES].sort((a, b) => (b.stats?.comments || 0) - (a.stats?.comments || 0)));
     } else {
       // default "newest"
       setMemes([...MOCK_USER_MEMES].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     }
   }, [sortOption]);
 
@@ -362,18 +352,19 @@ const UserDashboard = () => {
               <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-4'}`}>
                 {memes.map(meme => (
                   <div key={meme.id} className={viewMode === 'list' ? "border rounded-lg p-4" : ""}>
+                    {/* MemeCard component expects a specific type, so we need to adapt our mock data */}
                     {viewMode === 'list' ? (
                       <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0 w-24 h-24 relative rounded overflow-hidden">
-                          <img src={meme.image_url} alt={meme.title} className="w-full h-full object-cover" />
+                          <img src={meme.imageUrl} alt={meme.title} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-grow">
                           <h3 className="font-medium">{meme.title}</h3>
                           <div className="flex space-x-4 text-sm text-gray-500 mt-1">
-                            <span>{new Date(meme.created_at).toLocaleDateString()}</span>
-                            <span>{meme.vote_count} votes</span>
-                            <span>{meme.view_count} views</span>
-                            <span>{meme.comment_count} comments</span>
+                            <span>{new Date(meme.createdAt).toLocaleDateString()}</span>
+                            <span>{meme.voteCount} votes</span>
+                            <span>{meme.stats?.views} views</span>
+                            <span>{meme.stats?.comments} comments</span>
                           </div>
                           <div className="mt-2 space-x-2">
                             <Button variant="outline" size="sm" asChild>
@@ -386,7 +377,29 @@ const UserDashboard = () => {
                         </div>
                       </div>
                     ) : (
-                      <MemeCard meme={meme} />
+                      <MemeCard 
+                        meme={{ 
+                          id: meme.id, 
+                          title: meme.title, 
+                          image_url: meme.imageUrl, 
+                          description: meme.description || null, 
+                          created_at: meme.createdAt, 
+                          updated_at: meme.createdAt, 
+                          vote_count: meme.voteCount, 
+                          view_count: meme.stats?.views || 0, 
+                          comment_count: meme.stats?.comments || 0, 
+                          creator_id: meme.creator.id, 
+                          is_meme_of_day: !!meme.isMemeOfTheDay, 
+                          is_weekly_champion: !!meme.isWeeklyChampion,
+                          creator: {
+                            id: meme.creator.id,
+                            username: meme.creator.username,
+                            avatar: meme.creator.avatar,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                          }
+                        }}
+                      />
                     )}
                   </div>
                 ))}
