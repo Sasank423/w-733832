@@ -1,48 +1,48 @@
-# ImageGenHub - Community Meme Generator & Voting Platform
+# 🎭 ImageGenHub - Community Meme Generator & Voting Platform
 
-## Overview
+## 📋 Overview
 
 ImageGenHub is a dedicated platform for developers and tech enthusiasts to create, share, and vote on code-related memes. The application provides a comprehensive suite of tools for meme creation, community interaction, and content discovery.
 
-## Features
+## ✨ Features
 
-### Meme Creation Studio
+### 🎨 Meme Creation Studio
 - **Template Gallery**: Choose from 30+ popular meme templates
 - **Image Upload**: Upload your own images for customization
 - **Text Captions**: Add and position text captions with drag-and-drop functionality
 - **Styling Options**: Customize font size, color, family, and add text shadows
 - **Draft System**: Save works-in-progress and continue editing later
 
-### Community Interaction
+### 👥 Community Interaction
 - **Voting System**: Upvote or downvote memes (one vote per user)
 - **Comments**: Engage in discussions with a comment section for each meme
 - **Content Moderation**: Flag inappropriate content for review
 
-### Content Discovery
+### 🔍 Content Discovery
 - **Feed Filters**: Browse memes by New, Top 24h, Top Week, or All Time
 - **Infinite Scroll**: Seamlessly load more content as you browse
 - **Trending Content**: Discover the Meme of the Day and Weekly Champion
 
-### User Dashboard
+### 📊 User Dashboard
 - **Creator Dashboard**: View your published memes with engagement statistics
 - **Drafts Management**: Access and manage your saved drafts
 - **Profile Page**: View your created and liked memes in one place
 
-## Tech Stack
+## 💻 Tech Stack
 
 - **Frontend**: React, TypeScript, Tailwind CSS
 - **UI Components**: shadcn/ui, Framer Motion for animations
 - **Backend**: Supabase (PostgreSQL, Authentication, Storage)
 - **Build Tool**: Vite
 
-## Getting Started
+## 🚀 Getting Started
 
-### Prerequisites
+### 📍 Prerequisites
 - Node.js (v16+)
 - npm or yarn
 - Supabase account (for backend services)
 
-### Installation
+### 🔰 Installation
 
 ```bash
 # Clone the repository
@@ -61,7 +61,7 @@ npm install
 npm run dev
 ```
 
-### Supabase Setup
+### 🛠 Supabase Setup
 
 The project uses Supabase for backend functionality. The database schema migrations are included in the `supabase/migrations` directory.
 
@@ -70,7 +70,7 @@ The project uses Supabase for backend functionality. The database schema migrati
 3. Configure authentication providers
 4. Update your environment variables with Supabase credentials
 
-## Project Structure
+## 📚 Project Structure
 
 ```
 ├── public/             # Static assets
@@ -85,11 +85,11 @@ The project uses Supabase for backend functionality. The database schema migrati
 └── supabase/          # Supabase configuration and migrations
 ```
 
-## Contributing
+## 👮‍♀️ Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
+## 📜 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
