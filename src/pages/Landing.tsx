@@ -29,10 +29,10 @@ const Landing = () => {
     <Layout>
       <section className="container-layout py-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-purple to-brand-purple-dark mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-purple to-brand-purple-dark mb-6">
             ImageGenHub
           </h1>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto mt-4">
             Create, share, and discover AI-generated memes with our community of creators.
           </p>
           <div className="flex flex-wrap justify-center gap-4">

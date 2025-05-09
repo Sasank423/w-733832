@@ -18,6 +18,7 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("memes");
   const [profile, setProfile] = useState<any>(null);
   const [memes, setMemes] = useState<any[]>([]);
+  const [likedMemes, setLikedMemes] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ const ProfilePage = () => {
           .single();
         if (!error) setProfile(data);
       };
+      
       // Fetch user's memes
       const fetchMemes = async () => {
         const { data, error } = await supabase
@@ -40,7 +42,46 @@ const ProfilePage = () => {
           .order('created_at', { ascending: false });
         if (!error) setMemes(data || []);
       };
-      Promise.all([fetchProfile(), fetchMemes()]).then(() => setIsLoaded(true));
+      
+      // Fetch user's liked memes
+      const fetchLikedMemes = async () => {
+        // First get all the meme IDs that the user has upvoted
+        const { data: votesData, error: votesError } = await supabase
+          .from('votes')
+          .select('meme_id')
+          .eq('user_id', user.id)
+          .eq('value', 1); // value = 1 means upvote/like
+        
+        if (votesError) {
+          console.error('Error fetching votes:', votesError);
+          return;
+        }
+        
+        if (votesData && votesData.length > 0) {
+          // Extract meme IDs from votes
+          const memeIds = votesData.map(vote => vote.meme_id);
+          
+          // Fetch the actual memes using those IDs
+          const { data: memesData, error: memesError } = await supabase
+            .from('memes')
+            .select(`
+              *,
+              creator:profiles(id, username, avatar)
+            `)
+            .in('id', memeIds)
+            .order('created_at', { ascending: false });
+          
+          if (!memesError) {
+            setLikedMemes(memesData || []);
+          } else {
+            console.error('Error fetching liked memes:', memesError);
+          }
+        } else {
+          setLikedMemes([]);
+        }
+      };
+      
+      Promise.all([fetchProfile(), fetchMemes(), fetchLikedMemes()]).then(() => setIsLoaded(true));
     }
   }, [isAuthenticated, user]);
 
@@ -101,18 +142,65 @@ const ProfilePage = () => {
               
               <TabsContent value="memes">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {memes.map(meme => (
-                    <MemeCard key={meme.id} meme={meme} />
-                  ))}
+                  {memes.length > 0 ? (
+                    memes.map(meme => (
+                      <MemeCard key={meme.id} meme={{
+                        id: meme.id,
+                        title: meme.title || 'Untitled Meme',
+                        imageUrl: meme.image_url,
+                        createdAt: meme.created_at,
+                        voteCount: meme.vote_count || 0,
+                        creator: {
+                          id: meme.creator_id,
+                          username: profile.username,
+                          avatar: profile.avatar
+                        },
+                        stats: {
+                          views: meme.view_count || 0,
+                          comments: meme.comment_count || 0
+                        }
+                      }} />
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-gray-500">You haven't created any memes yet.</p>
+                      <Button asChild className="mt-4">
+                        <Link to="/create">Create Your First Meme</Link>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
               
               <TabsContent value="liked">
-                <div className="text-center py-12">
-                  <p className="text-gray-500">You haven't liked any memes yet.</p>
-                  <Button asChild className="mt-4">
-                    <Link to="/browse">Browse Memes</Link>
-                  </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {likedMemes.length > 0 ? (
+                    likedMemes.map(meme => (
+                      <MemeCard key={meme.id} meme={{
+                        id: meme.id,
+                        title: meme.title || 'Untitled Meme',
+                        imageUrl: meme.image_url,
+                        createdAt: meme.created_at,
+                        voteCount: meme.vote_count || 0,
+                        creator: {
+                          id: meme.creator.id,
+                          username: meme.creator.username,
+                          avatar: meme.creator.avatar
+                        },
+                        stats: {
+                          views: meme.view_count || 0,
+                          comments: meme.comment_count || 0
+                        }
+                      }} />
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-gray-500">You haven't liked any memes yet.</p>
+                      <Button asChild className="mt-4">
+                        <Link to="/browse">Browse Memes</Link>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
               

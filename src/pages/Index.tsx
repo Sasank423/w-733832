@@ -36,22 +36,70 @@ const HomePage = () => {
   // Fetch memes from Supabase
   const fetchMemes = useCallback(async (reset = false) => {
     setIsLoading(true);
+    
+    // Get current date for time-based filters
+    const now = new Date();
+    
+    // Base query
     let query = supabase
       .from('memes')
       .select(`
         *,
         creator:profiles(id, username, avatar, created_at, updated_at)
-      `)
-      .order('created_at', { ascending: false })
-      .range(reset ? 0 : memes.length, (reset ? 0 : memes.length) + 9);
-    // You can add filter logic here based on activeFilter
+      `);
+    
+    // Apply filter logic based on activeFilter
+    switch (activeFilter) {
+      case 'new':
+        // For 'new', order by creation date (newest first)
+        query = query.order('created_at', { ascending: false });
+        break;
+        
+      case 'top-day': {
+        // For 'top-day', get memes from the last 24 hours ordered by vote count
+        const oneDayAgo = new Date(now);
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+        query = query
+          .gte('created_at', oneDayAgo.toISOString())
+          .order('vote_count', { ascending: false })
+          .order('created_at', { ascending: false });
+        break;
+      }
+        
+      case 'top-week': {
+        // For 'top-week', get memes from the last 7 days ordered by vote count
+        const oneWeekAgo = new Date(now);
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        query = query
+          .gte('created_at', oneWeekAgo.toISOString())
+          .order('vote_count', { ascending: false })
+          .order('created_at', { ascending: false });
+        break;
+      }
+        
+      case 'top-all':
+        // For 'top-all', order all memes by vote count (highest first)
+        query = query
+          .order('vote_count', { ascending: false })
+          .order('created_at', { ascending: false });
+        break;
+    }
+    
+    // Apply pagination
+    query = query.range(reset ? 0 : memes.length, (reset ? 0 : memes.length) + 9);
+    
+    // Execute the query
     const { data, error } = await query;
+    
     if (!error) {
       setMemes(prev => reset ? (data || []) : [...prev, ...(data || [])]);
       setHasMore((data?.length || 0) === 10);
+    } else {
+      console.error('Error fetching memes:', error);
     }
+    
     setIsLoading(false);
-  }, [memes.length]);
+  }, [memes.length, activeFilter]);
 
   // Infinite scroll
   const lastMemeElementRef = useCallback((node: HTMLDivElement | null) => {
@@ -74,7 +122,7 @@ const HomePage = () => {
 
   const handleFilterChange = (filter: FeedType) => {
     setActiveFilter(filter);
-    // In a real app, you'd fetch new data based on the filter
+    // This will trigger the useEffect that calls fetchMemes(true)
   };
 
   const handleVote = async (memeId: string, value: number) => {
