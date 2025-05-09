@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -32,22 +31,18 @@ const FeaturedMeme = ({ meme }: FeaturedMemeProps) => {
       
       <div className="flex flex-col md:flex-row rounded-lg overflow-hidden bg-white dark:bg-gray-900">
         <div className="relative md:w-2/3 w-full">
-          <Link to={`/meme/${meme.id}`}>
-            <img 
-              src={meme.image_url} 
-              alt={meme.title}
-              className="w-full h-64 md:h-full object-cover"
-            />
-          </Link>
+          <img 
+            src={meme.image_url} 
+            alt={meme.title}
+            className="w-full h-64 md:h-full object-cover"
+          />
         </div>
         
         <div className="md:w-1/3 w-full p-6 flex flex-col justify-between">
           <div>
-            <Link to={`/meme/${meme.id}`}>
-              <h2 className="text-2xl font-bold mb-2 hover:text-brand-purple transition-colors">
-                {meme.title}
-              </h2>
-            </Link>
+            <h2 className="text-2xl font-bold mb-2 hover:text-brand-purple transition-colors">
+              {meme.title}
+            </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               {meme.description}
             </p>
@@ -62,17 +57,15 @@ const FeaturedMeme = ({ meme }: FeaturedMemeProps) => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <Link to={`/user/${meme.creator.id}`} className="text-sm font-medium hover:text-brand-purple">
+                <span className="text-sm font-medium">
                   {meme.creator.username}
-                </Link>
+                </span>
                 <p className="text-xs text-gray-500">{meme.vote_count} votes</p>
               </div>
             </div>
             
             <div className="flex justify-between items-center">
-              <Button asChild>
-                <Link to={`/meme/${meme.id}`}>View Meme</Link>
-              </Button>
+              <Button disabled>View Meme</Button>
               
               <Button 
                 variant="ghost" 

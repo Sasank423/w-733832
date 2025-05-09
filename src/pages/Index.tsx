@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Layout from '@/components/layout/Layout';
 import FeedFilters, { FeedType } from '@/components/meme/FeedFilters';
@@ -11,136 +10,183 @@ import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import CommentSidebar from '@/components/meme/CommentSidebar';
 import TrendingMemes from '@/components/meme/TrendingMemes';
-
-// Mock data - In a real app, this would come from an API
-const MOCK_MEMES = [
-  {
-    id: 'meme2',
-    title: 'Debugging at 2am',
-    imageUrl: 'https://images.unsplash.com/photo-1500673922987-e212871fec22',
-    createdAt: '2023-05-07T10:30:00Z',
-    voteCount: 453,
-    creator: {
-      id: 'user2',
-      username: 'NightCoder',
-    },
-    stats: {
-      views: 1872,
-      comments: 42,
-    }
-  },
-  {
-    id: 'meme3',
-    title: 'Monday mornings be like',
-    imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b',
-    createdAt: '2023-05-06T09:15:00Z',
-    voteCount: 287,
-    creator: {
-      id: 'user3',
-      username: 'CoffeeAddict',
-    },
-    isFeatured: true,
-    isWeeklyChampion: true,
-    stats: {
-      views: 2453,
-      comments: 57,
-    }
-  },
-  {
-    id: 'meme4',
-    title: 'When you fix one bug and create ten more',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
-    createdAt: '2023-05-05T15:45:00Z',
-    voteCount: 742,
-    creator: {
-      id: 'user4',
-      username: 'BugHunter',
-    },
-    stats: {
-      views: 3241,
-      comments: 86,
-    }
-  },
-  {
-    id: 'meme5',
-    title: 'The perfect code doesn\'t exi...',
-    imageUrl: 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7',
-    createdAt: '2023-05-04T18:20:00Z',
-    voteCount: 521,
-    creator: {
-      id: 'user5',
-      username: 'CleanCoder',
-    },
-    stats: {
-      views: 1568,
-      comments: 32,
-    }
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { useVoteMutation, useUserVote } from '@/hooks/useMemes';
+import { useComments, useAddCommentMutation } from '@/hooks/useComments';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const HomePage = () => {
   const [activeFilter, setActiveFilter] = useState<FeedType>('new');
-  const [memes, setMemes] = useState(MOCK_MEMES);
+  const [memes, setMemes] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const observer = useRef<IntersectionObserver | null>(null);
   const [selectedMeme, setSelectedMeme] = useState<string | null>(null);
   const [showTrendingSection, setShowTrendingSection] = useState(true);
-  
-  // Function to fetch more memes (simulated)
-  const fetchMoreMemes = useCallback(async () => {
-    if (isLoading || !hasMore) return;
-    
+  const queryClient = useQueryClient();
+  const voteMutation = useVoteMutation();
+  const addCommentMutation = useAddCommentMutation();
+  const userVote = useUserVote(selectedMeme);
+
+  // Fetch memes from Supabase
+  const fetchMemes = useCallback(async (reset = false) => {
     setIsLoading(true);
-    
-    // Simulate API call with a delay
-    setTimeout(() => {
-      // In a real app, you'd append new memes from the API based on the page
-      if (page < 4) {
-        setMemes(prev => [...prev, ...MOCK_MEMES.slice(0, 2)]);
-        setPage(prev => prev + 1);
-      } else {
-        setHasMore(false);
-      }
-      setIsLoading(false);
-    }, 1000);
-  }, [isLoading, hasMore, page]);
-  
-  // Handle intersection observer for infinite scroll
+    let query = supabase
+      .from('memes')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(reset ? 0 : memes.length, (reset ? 0 : memes.length) + 9);
+    // You can add filter logic here based on activeFilter
+    const { data, error } = await query;
+    if (!error) {
+      setMemes(prev => reset ? (data || []) : [...prev, ...(data || [])]);
+      setHasMore((data?.length || 0) === 10);
+    }
+    setIsLoading(false);
+  }, [memes.length]);
+
+  // Infinite scroll
   const lastMemeElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
-    
     if (observer.current) observer.current.disconnect();
-    
     observer.current = new IntersectionObserver(entries => {
       if (entries[0]?.isIntersecting && hasMore) {
-        fetchMoreMemes();
+        fetchMemes();
       }
     });
-    
     if (node) observer.current.observe(node);
-  }, [isLoading, hasMore, fetchMoreMemes]);
-  
+  }, [isLoading, hasMore, fetchMemes]);
+
   useEffect(() => {
     // Reset when filter changes
-    setMemes(MOCK_MEMES);
+    fetchMemes(true);
     setPage(1);
     setHasMore(true);
-  }, [activeFilter]);
+  }, [activeFilter, fetchMemes]);
 
   const handleFilterChange = (filter: FeedType) => {
     setActiveFilter(filter);
     // In a real app, you'd fetch new data based on the filter
   };
-  
-  const handleVote = () => {
+
+  const handleVote = async (memeId: string, value: number) => {
     if (!isAuthenticated) {
       toast({
         title: "Authentication required",
-        description: "You need to sign in to like memes.",
+        description: "You need to sign in to like or dislike memes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // 1. Fetch current meme counts
+      const { data: memeData, error: memeError } = await supabase
+        .from('memes')
+        .select('vote_count, dislike_count')
+        .eq('id', memeId)
+        .single();
+      if (memeError) {
+        console.error('Error fetching meme counts:', memeError);
+        throw memeError;
+      }
+      console.log('Fetched meme counts:', memeData);
+      const { vote_count: initialVoteCount, dislike_count: initialDislikeCount } = memeData as unknown as { vote_count: number; dislike_count: number };
+      let vote_count = initialVoteCount || 0;
+      let dislike_count = initialDislikeCount || 0;
+
+      // 2. Fetch user's current vote
+      const { data: voteData, error: voteError } = await supabase
+        .from('votes')
+        .select('id, value')
+        .eq('meme_id', memeId)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      if (voteError) {
+        console.error('Error fetching user vote:', voteError);
+        throw voteError;
+      }
+      console.log('Fetched user vote:', voteData);
+
+      // 3. Update counts and votes as needed
+      if (voteData) {
+        if (voteData.value === value) {
+          // Remove vote
+          const { error: deleteError } = await supabase.from('votes').delete().eq('id', voteData.id);
+          if (deleteError) {
+            console.error('Error deleting vote:', deleteError);
+            throw deleteError;
+          }
+          if (value === 1) vote_count--;
+          else dislike_count--;
+          console.log('Removed vote. New counts:', { vote_count, dislike_count });
+        } else {
+          // Switch vote
+          const { error: updateVoteError } = await supabase.from('votes').update({ value }).eq('id', voteData.id);
+          if (updateVoteError) {
+            console.error('Error updating vote:', updateVoteError);
+            throw updateVoteError;
+          }
+          if (value === 1) {
+            vote_count++;
+            dislike_count--;
+          } else {
+            vote_count--;
+            dislike_count++;
+          }
+          console.log('Switched vote. New counts:', { vote_count, dislike_count });
+        }
+      } else {
+        // New vote
+        const { error: insertError } = await supabase.from('votes').insert({ meme_id: memeId, user_id: user?.id, value });
+        if (insertError) {
+          console.error('Error inserting vote:', insertError);
+          throw insertError;
+        }
+        if (value === 1) vote_count++;
+        else dislike_count++;
+        console.log('Inserted new vote. New counts:', { vote_count, dislike_count });
+      }
+
+      // 4. Update memes table
+      const { error: updateMemeError } = await supabase.from('memes').update({ vote_count, dislike_count }).eq('id', memeId);
+      if (updateMemeError) {
+        console.error('Error updating meme counts:', updateMemeError);
+        throw updateMemeError;
+      }
+      console.log('Updated meme counts in DB:', { vote_count, dislike_count });
+
+      // 5. Fetch and display updated counts
+      const { data: updatedMeme, error: updatedMemeError } = await supabase
+        .from('memes')
+        .select('vote_count, dislike_count')
+        .eq('id', memeId)
+        .single();
+      if (updatedMemeError) {
+        console.error('Error fetching updated meme counts:', updatedMemeError);
+        throw updatedMemeError;
+      }
+      const { vote_count: updatedVoteCount, dislike_count: updatedDislikeCount } = updatedMeme as unknown as { vote_count: number; dislike_count: number };
+      console.log('Fetched updated meme counts:', { updatedVoteCount, updatedDislikeCount });
+
+      setMemes(prevMemes => prevMemes.map(meme =>
+        meme.id === memeId
+          ? { ...meme, vote_count: updatedVoteCount, dislike_count: updatedDislikeCount }
+          : meme
+      ));
+
+      // Optionally, invalidate queries if you want to keep react-query in sync
+      queryClient.invalidateQueries({ queryKey: ['meme-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['vote', memeId] });
+    } catch (error: any) {
+      console.error('Vote failed:', error);
+      toast({
+        title: "Vote failed",
+        description: error.message || "Failed to register vote",
         variant: "destructive",
       });
     }
@@ -149,6 +195,13 @@ const HomePage = () => {
   const handleCommentClick = (memeId: string) => {
     setSelectedMeme(selectedMeme === memeId ? null : memeId);
   };
+
+  // Invalidate meme-feed after a comment is added
+  useEffect(() => {
+    if (addCommentMutation.isSuccess) {
+      queryClient.invalidateQueries({ queryKey: ['meme-feed'] });
+    }
+  }, [addCommentMutation.isSuccess, queryClient]);
 
   return (
     <Layout>
@@ -187,28 +240,32 @@ const HomePage = () => {
                   {memes.map((meme, index) => {
                     // Check if this is the last element to add the ref
                     const isLastElement = index === memes.length - 1;
-                    
                     return (
                       <Card 
                         key={`${meme.id}-${index}`} 
                         className="overflow-hidden"
                         ref={isLastElement ? lastMemeElementRef : null}
+                        onMouseEnter={async () => {
+                          // Increment view count when meme is hovered (viewed)
+                          await supabase.from('memes').update({ view_count: (meme.view_count || 0) + 1 }).eq('id', meme.id);
+                          queryClient.invalidateQueries({ queryKey: ['meme-feed'] });
+                        }}
                       >
                         <CardHeader className="p-4 border-b">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8 mr-1">
-                                <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${meme.creator.username}`} />
+                                <AvatarImage src={meme.creator_avatar || ''} />
                                 <AvatarFallback>
-                                  {meme.creator.username.charAt(0).toUpperCase()}
+                                  {meme.creator_username ? meme.creator_username.charAt(0).toUpperCase() : '?'}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <Link to={`/user/${meme.creator.id}`} className="font-medium hover:underline">
-                                  {meme.creator.username}
-                                </Link>
+                                <span className="font-medium">
+                                  {meme.creator_username || 'Unknown'}
+                                </span>
                                 <p className="text-xs text-muted-foreground">
-                                  {new Date(meme.createdAt).toLocaleDateString()}
+                                  {meme.created_at ? new Date(meme.created_at).toLocaleDateString() : ''}
                                 </p>
                               </div>
                             </div>
@@ -216,15 +273,13 @@ const HomePage = () => {
                         </CardHeader>
                         
                         <CardContent className="p-0">
-                          <Link to={`/meme/${meme.id}`}>
-                            <div className="relative">
-                              <img 
-                                src={meme.imageUrl} 
-                                alt={meme.title}
-                                className="w-full max-h-[70vh] object-contain mx-auto"
-                              />
-                            </div>
-                          </Link>
+                          <div className="relative">
+                            <img 
+                              src={meme.image_url} 
+                              alt={meme.title}
+                              className="w-full max-h-[70vh] object-contain mx-auto"
+                            />
+                          </div>
                           
                           <div className="p-4">
                             <h3 className="text-xl font-bold">{meme.title}</h3>
@@ -232,17 +287,42 @@ const HomePage = () => {
                         </CardContent>
                         
                         <CardFooter className="flex justify-between p-4 border-t">
-                          <div className="flex gap-4">
+                          <div className="flex gap-4 items-center">
+                            {/* Like Button */}
                             <Button 
                               variant="ghost" 
                               size="sm" 
                               disabled={!isAuthenticated} 
-                              className={!isAuthenticated ? 'text-muted-foreground' : ''}
-                              onClick={handleVote}
+                              className={`${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVote.data?.value === 1 ? 'text-blue-500' : ''}`}
+                              onClick={() => handleVote(meme.id, 1)}
                             >
-                              <ThumbsUp className="mr-1 h-4 w-4" />
-                              <span>{meme.voteCount}</span>
+                              <motion.div
+                                whileTap={{ scale: 1.3 }}
+                                transition={{ type: 'spring', stiffness: 300 }}
+                                className="flex items-center"
+                              >
+                                <ThumbsUp className={`mr-1 h-4 w-4 ${userVote.data?.value === 1 ? 'fill-current' : ''}`} />
+                                <span>{meme.vote_count}</span>
+                              </motion.div>
                             </Button>
+                            {/* Dislike Button */}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              disabled={!isAuthenticated} 
+                              className={`${!isAuthenticated ? 'text-muted-foreground' : ''} ${userVote.data?.value === -1 ? 'text-red-500' : ''}`}
+                              onClick={() => handleVote(meme.id, -1)}
+                            >
+                              <motion.div
+                                whileTap={{ scale: 1.3 }}
+                                transition={{ type: 'spring', stiffness: 300 }}
+                                className="flex items-center"
+                              >
+                                <ThumbsUp className={`mr-1 h-4 w-4 rotate-180 ${userVote.data?.value === -1 ? 'fill-current' : ''}`} />
+                                <span>{meme.dislike_count}</span>
+                              </motion.div>
+                            </Button>
+                            {/* Comment Button */}
                             <Button 
                               variant="ghost" 
                               size="sm"
@@ -250,10 +330,20 @@ const HomePage = () => {
                               className={selectedMeme === meme.id ? "bg-muted" : ""}
                             >
                               <MessageSquare className="mr-1 h-4 w-4" />
-                              <span>{meme.stats?.comments}</span>
+                              <span>{meme.comment_count || 0}</span>
                             </Button>
                           </div>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(window.location.origin + `/meme/${meme.id}`);
+                              toast({
+                                title: "Link copied",
+                                description: "Meme link copied to clipboard!",
+                              });
+                            }}
+                          >
                             <Share2 className="mr-1 h-4 w-4" />
                             Share
                           </Button>
@@ -261,26 +351,14 @@ const HomePage = () => {
                       </Card>
                     );
                   })}
-                  
-                  {isLoading && (
-                    <div className="text-center py-8">
-                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent">
-                        <span className="sr-only">Loading...</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {!hasMore && !isLoading && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      You've reached the end of the feed
-                    </div>
-                  )}
+                  {isLoading && <div className="text-center py-8">Loading more memes...</div>}
+                  {!hasMore && <div className="text-center py-8 text-muted-foreground">No more memes to load.</div>}
                 </div>
               )}
             </div>
-            
+            {/* Comment Sidebar */}
             {selectedMeme && (
-              <div className={`w-2/5 pl-4 sticky top-[80px] self-start max-h-[calc(100vh-100px)]`}>
+              <div className="max-w-[700px] w-full mx-auto ml-8">
                 <CommentSidebar memeId={selectedMeme} onClose={() => setSelectedMeme(null)} />
               </div>
             )}

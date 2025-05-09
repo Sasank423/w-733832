@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Menu, Search, Eye } from "lucide-react";
-import UserMenu from "@/components/user/UserMenu";
+import UserMenu from "@/components/layout/UserMenu";
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/auth/AuthModal';
 import NotificationCenter from '@/components/user/NotificationCenter';
@@ -16,15 +15,32 @@ interface NavbarProps {
 }
 
 const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
-  const { isAuthenticated, profile } = useAuth();
+  const { isAuthenticated, profile, logout } = useAuth();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalType, setAuthModalType] = useState<'login' | 'signup'>('login');
 
+  // Close auth modal when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setIsAuthModalOpen(false);
+    }
+  }, [isAuthenticated]);
+
   const openModal = (type: 'login' | 'signup') => {
     setAuthModalType(type);
     setIsAuthModalOpen(true);
+    setIsMobileMenuOpen(false); // Close mobile menu when opening auth modal
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsMobileMenuOpen(false); // Close mobile menu after logout
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const navbarClasses = isCollapsed
@@ -80,7 +96,6 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  id="auth-modal-trigger" 
                   onClick={() => openModal('login')}
                 >
                   Log in
@@ -138,7 +153,7 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
                 <Button 
                   variant="destructive" 
                   className="w-full mt-2"
-                  onClick={() => console.log("Logout")}
+                  onClick={handleLogout}
                 >
                   Log out
                 </Button>

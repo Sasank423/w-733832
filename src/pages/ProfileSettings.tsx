@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const profileSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -57,14 +58,36 @@ const ProfileSettings = () => {
   const onProfileSubmit = async (data: ProfileFormValues) => {
     try {
       setIsProfileUpdating(true);
-      // In a real app, this would call an API endpoint to update the profile
-      console.log('Profile data to update:', data);
-      
-      if (avatarFile) {
-        // In a real app, this would upload the avatar file to a storage service
-        console.log('Avatar file to upload:', avatarFile);
+      let avatarUrl = profile?.avatar;
+
+      // Upload avatar if a new file is selected
+      if (avatarFile && user) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile, { upsert: true });
+        if (uploadError) {
+          throw uploadError;
+        }
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+        avatarUrl = publicUrlData.publicUrl;
       }
-      
+
+      // Update profile in the database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          username: data.username,
+          bio: data.bio,
+          avatar: avatarUrl,
+        })
+        .eq('id', user?.id);
+      if (updateError) {
+        throw updateError;
+      }
+
       toast({
         title: "Success",
         description: "Your profile has been updated.",

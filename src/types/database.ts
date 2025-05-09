@@ -1,4 +1,3 @@
-
 export interface Profile {
   id: string;
   username: string;
@@ -23,6 +22,7 @@ export interface Meme {
   is_weekly_champion: boolean;
   creator?: Profile;
   tags?: MemeTag[];
+  dislike_count: number;
 }
 
 export interface Tag {

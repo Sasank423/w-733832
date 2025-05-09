@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,56 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
-
-// Mock notification data
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: 'vote',
-    message: 'CodeMaster upvoted your meme "When the code finally works"',
-    timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 minutes ago
-    read: false,
-    link: '/meme/meme1',
-    user: {
-      id: 'user1',
-      username: 'CodeMaster',
-      avatar: ''
-    }
-  },
-  {
-    id: 2,
-    type: 'comment',
-    message: 'NightCoder commented on your meme "Debugging at 2am"',
-    commentText: 'This is so relatable! Been there too many times! 😂',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
-    read: false,
-    link: '/meme/meme2',
-    user: {
-      id: 'user2',
-      username: 'NightCoder',
-      avatar: ''
-    }
-  },
-  {
-    id: 3,
-    type: 'achievement',
-    message: 'Congratulations! Your meme reached 1,000 upvotes',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-    read: true,
-    link: '/meme/meme1',
-  },
-  {
-    id: 4,
-    type: 'system',
-    message: 'Welcome to ImageGenHub! Create your first meme to get started.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-    read: true,
-    link: '/create',
-  },
-];
+// import { supabase } from '@/integrations/supabase/client';
 
 const NotificationCenter = () => {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  // TODO: Replace with real notifications from DB when available
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
@@ -75,8 +29,8 @@ const NotificationCenter = () => {
     setUnreadCount(count);
   }, [notifications]);
 
+  // Placeholder for notification click logic
   const handleNotificationClick = (notificationId: number) => {
-    // Mark notification as read
     setNotifications(notifications.map(notification => 
       notification.id === notificationId ? { ...notification, read: true } : notification
     ));
@@ -110,7 +64,6 @@ const NotificationCenter = () => {
     const now = new Date();
     const notifTime = new Date(timestamp);
     const diffInSeconds = Math.floor((now.getTime() - notifTime.getTime()) / 1000);
-    
     if (diffInSeconds < 60) {
       return 'just now';
     } else if (diffInSeconds < 3600) {
@@ -172,7 +125,6 @@ const NotificationCenter = () => {
                         </div>
                       )}
                     </div>
-                    
                     <div className="flex-grow overflow-hidden">
                       <p className="text-sm leading-snug line-clamp-2">
                         {notification.message}
@@ -186,7 +138,6 @@ const NotificationCenter = () => {
                         {getTimeAgo(notification.timestamp)}
                       </p>
                     </div>
-                    
                     {!notification.read && (
                       <div className="ml-2 flex-shrink-0 self-start mt-1">
                         <div className="h-2 w-2 rounded-full bg-brand-purple" />
@@ -198,12 +149,6 @@ const NotificationCenter = () => {
             )}
           </DropdownMenuGroup>
         </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/notifications" className="w-full justify-center">
-            <span className="text-xs text-center">View all notifications</span>
-          </Link>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

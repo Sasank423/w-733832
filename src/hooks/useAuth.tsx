@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -60,60 +59,119 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Set up auth state listener
   useEffect(() => {
     let mounted = true;
+    let isInitialCheck = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (mounted) {
-          console.log('Auth state changed:', event);
-          setSession(session);
-          setUser(session?.user ?? null);
+          console.log('useAuth: Auth state changed:', { event, hasSession: !!session, isInitialCheck });
+          
+          // Skip automatic sign-in on initial load
+          if (isInitialCheck && event === 'SIGNED_IN') {
+            console.log('useAuth: Skipping automatic sign-in on initial load');
+            isInitialCheck = false;
+            return;
+          }
           
           if (event === 'SIGNED_OUT') {
+            console.log('useAuth: User signed out, clearing states');
+            setSession(null);
+            setUser(null);
             setProfile(null);
-          } else if (session?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
-            // Defer profile fetch to avoid Supabase deadlocks
-            setTimeout(() => {
-              if (mounted) refreshProfile();
-            }, 0);
+            navigate('/');
+          } else {
+            console.log('useAuth: Setting session and user');
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+              try {
+                console.log('useAuth: Fetching user profile');
+                const { data, error } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', session.user.id)
+                  .single();
+
+                if (error) {
+                  console.error('useAuth: Error fetching profile:', error);
+                  return;
+                }
+
+                if (mounted) {
+                  console.log('useAuth: Setting user profile');
+                  setProfile(data);
+                }
+              } catch (error) {
+                console.error('useAuth: Error fetching profile:', error);
+              }
+            }
           }
         }
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (mounted) {
-        console.log('Initial session check:', session ? 'Session found' : 'No session');
-        setSession(session);
-        setUser(session?.user ?? null);
+        console.log('useAuth: Initial session check:', { hasSession: !!session });
         
-        if (session?.user) {
-          // Defer profile fetch to avoid Supabase deadlocks
-          setTimeout(() => {
-            if (mounted) refreshProfile();
-          }, 0);
+        // Only set the session if it's not an automatic sign-in
+        if (!isInitialCheck) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            try {
+              console.log('useAuth: Fetching initial user profile');
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+              if (error) {
+                console.error('useAuth: Error fetching initial profile:', error);
+                return;
+              }
+
+              if (mounted) {
+                console.log('useAuth: Setting initial user profile');
+                setProfile(data);
+              }
+            } catch (error) {
+              console.error('useAuth: Error fetching initial profile:', error);
+            }
+          }
         }
         
         setIsLoading(false);
+        isInitialCheck = false;
       }
     });
 
     return () => {
+      console.log('useAuth: Cleaning up auth state listener');
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const login = async (email: string, password: string) => {
+    console.log('useAuth: Starting login process');
     setIsLoading(true);
     
     try {
+      // Clear any existing session first
+      await supabase.auth.signOut();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('useAuth: Login failed:', error);
         toast({
           title: "Login failed",
           description: error.message,
@@ -122,15 +180,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw error;
       }
       
+      console.log('useAuth: Login successful');
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
       
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('useAuth: Login error:', error);
       throw error;
     } finally {
+      console.log('useAuth: Login process completed');
       setIsLoading(false);
     }
   };
@@ -184,9 +244,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
       
-      setUser(null);
-      setProfile(null);
-      setSession(null);
+      // States will be cleared by the auth state listener
       navigate('/');
       
       toast({

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -6,6 +5,7 @@ import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { StudioLayout } from '@/components/studio/StudioLayout';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from '@/components/ui/sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define draggable text caption structure
 interface DraggableCaption {
@@ -135,7 +135,7 @@ const MemeCreationStudio = () => {
   };
 
   // Publish the meme
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!isAuthenticated) {
       shadowToast({
         title: 'Authentication required',
@@ -164,14 +164,112 @@ const MemeCreationStudio = () => {
       return;
     }
 
-    // In a real app, this would publish to a backend
-    toast('Meme published!', {
-      description: 'Your meme is now live for everyone to see.',
-    });
-    
-    // Navigate to the meme details page
-    // In a real app, this would navigate to the actual published meme
-    setTimeout(() => navigate('/'), 1500);
+    try {
+      // Get the current image URL
+      const currentImageUrl = meme.imageUrls[currentImageIndex];
+      
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
+
+      // Create a canvas to draw the meme
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not create canvas context');
+
+      // Load the image
+      const img = new Image();
+      img.crossOrigin = 'anonymous'; // Enable CORS
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = currentImageUrl;
+      });
+
+      // Set canvas size to match image
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // Draw the image
+      ctx.drawImage(img, 0, 0);
+
+      // Configure text style
+      ctx.fillStyle = meme.textColor;
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = meme.fontSize / 10;
+      ctx.textAlign = 'center';
+      ctx.font = `bold ${meme.fontSize}px ${meme.fontFamily}`;
+
+      // Draw captions
+      meme.textCaptions.forEach(caption => {
+        const x = (canvas.width * caption.position.x) / 100;
+        const y = (canvas.height * caption.position.y) / 100;
+        
+        if (meme.textShadow) {
+          ctx.strokeText(caption.text, x, y);
+        }
+        ctx.fillText(caption.text, x, y);
+      });
+
+      // Convert canvas to blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+        }, 'image/jpeg', 0.95);
+      });
+
+      // Upload to Supabase Storage with user ID in path
+      const fileName = `${user.id}/${Date.now()}.jpg`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('memes')
+        .upload(fileName, blob, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: 'image/jpeg'
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('memes')
+        .getPublicUrl(fileName);
+
+      // Save to database
+      const { data: memeData, error: dbError } = await supabase
+        .from('memes')
+        .insert({
+          creator_id: user.id,
+          title: meme.textCaptions.map(c => c.text).join(' ') || 'Untitled Meme',
+          description: `Created with ${meme.textCaptions.length} captions`,
+          image_url: publicUrl,
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        throw dbError;
+      }
+
+      toast('Meme published!', {
+        description: 'Your meme is now live for everyone to see.',
+      });
+      
+      // Navigate to the meme details page
+      navigate(`/meme/${memeData.id}`);
+    } catch (error) {
+      console.error('Error publishing meme:', error);
+      shadowToast({
+        title: 'Failed to publish',
+        description: error instanceof Error ? error.message : 'There was an error publishing your meme. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (

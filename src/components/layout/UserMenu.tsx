@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -24,6 +23,14 @@ const UserMenu = () => {
     );
   }
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -36,48 +43,37 @@ const UserMenu = () => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      
-      <DropdownMenuContent className="w-56" align="end">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium">{profile.username}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          <div className="flex flex-col">
+            <span className="font-medium">{profile.username}</span>
+            <span className="text-sm text-muted-foreground">{user?.email}</span>
           </div>
         </DropdownMenuLabel>
-        
         <DropdownMenuSeparator />
-        
         <DropdownMenuItem asChild>
-          <Link to="/create" className="cursor-pointer flex w-full items-center">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            <span>Create Meme</span>
-          </Link>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem asChild>
-          <Link to="/creator" className="cursor-pointer flex w-full items-center">
+          <Link to="/profile" className="flex items-center">
             <User className="mr-2 h-4 w-4" />
-            <span>My Dashboard</span>
+            My Profile
           </Link>
         </DropdownMenuItem>
-        
-        <DropdownMenuSeparator />
-        
         <DropdownMenuItem asChild>
-          <Link to="/settings" className="cursor-pointer flex w-full items-center">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+          <Link to="/creator" className="flex items-center">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            My Memes
           </Link>
         </DropdownMenuItem>
-        
         <DropdownMenuSeparator />
-        
-        <DropdownMenuItem 
-          onClick={() => logout()} 
-          className="cursor-pointer text-red-600 focus:text-red-600"
-        >
+        <DropdownMenuItem asChild>
+          <Link to="/settings" className="flex items-center">
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout} className="text-red-600">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

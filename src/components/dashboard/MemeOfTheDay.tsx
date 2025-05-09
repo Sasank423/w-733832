@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Trophy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,22 +37,18 @@ const MemeOfTheDay = ({ meme }: MemeOfTheDayProps) => {
           
           <div className="flex flex-col md:flex-row rounded-lg overflow-hidden bg-white dark:bg-gray-900">
             <div className="relative md:w-2/3 w-full">
-              <Link to={`/meme/${meme.id}`}>
-                <img 
-                  src={meme.imageUrl} 
-                  alt={meme.title}
-                  className="w-full h-64 md:h-full object-cover"
-                />
-              </Link>
+              <img 
+                src={meme.imageUrl} 
+                alt={meme.title}
+                className="w-full h-64 md:h-full object-cover"
+              />
             </div>
             
             <div className="md:w-1/3 w-full p-6 flex flex-col justify-between">
               <div>
-                <Link to={`/meme/${meme.id}`}>
-                  <h2 className="text-2xl font-bold mb-2 hover:text-brand-purple transition-colors">
-                    {meme.title}
-                  </h2>
-                </Link>
+                <h2 className="text-2xl font-bold mb-2 hover:text-brand-purple transition-colors">
+                  {meme.title}
+                </h2>
                 {meme.description && (
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
                     {meme.description}
@@ -70,17 +65,15 @@ const MemeOfTheDay = ({ meme }: MemeOfTheDayProps) => {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <Link to={`/user/${meme.creator.id}`} className="text-sm font-medium hover:text-brand-purple">
+                    <span className="text-sm font-medium">
                       {meme.creator.username}
-                    </Link>
+                    </span>
                     <p className="text-xs text-gray-500">{meme.voteCount} votes</p>
                   </div>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <Button asChild variant="outline">
-                    <Link to={`/meme/${meme.id}`}>View Meme</Link>
-                  </Button>
+                  <Button variant="outline" disabled>View Meme</Button>
                 </div>
               </div>
             </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,121 +9,55 @@ import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { Link } from "react-router-dom";
 import { Plus, Eye, MessageSquare, Heart, ArrowLeft } from "lucide-react";
 import MemeStats from "@/components/dashboard/MemeStats";
-
-// Mock data for user memes and stats
-const MOCK_USER_MEMES = [
-  {
-    id: "meme1",
-    title: "When the code finally works",
-    imageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
-    createdAt: "2023-05-08T12:00:00Z",
-    voteCount: 1562,
-    creator: {
-      id: "user1",
-      username: "CodeMaster",
-    },
-    stats: {
-      views: 4872,
-      comments: 124,
-    }
-  },
-  {
-    id: "meme2",
-    title: "Debugging at 2am",
-    imageUrl: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
-    createdAt: "2023-05-07T10:30:00Z",
-    voteCount: 453,
-    creator: {
-      id: "user2",
-      username: "NightCoder",
-    },
-    stats: {
-      views: 1872,
-      comments: 42,
-    }
-  },
-  {
-    id: "meme3",
-    title: "Monday mornings be like",
-    imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b",
-    createdAt: "2023-05-06T09:15:00Z",
-    voteCount: 287,
-    creator: {
-      id: "user3",
-      username: "CoffeeAddict",
-    },
-    stats: {
-      views: 972,
-      comments: 28,
-    }
-  }
-];
-
-// Mock data for drafts
-const MOCK_USER_DRAFTS = [
-  {
-    id: "draft1",
-    title: "Work in progress meme",
-    imageUrl: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7",
-    lastEdited: "2023-05-10T14:20:00Z",
-  },
-  {
-    id: "draft2",
-    title: "Funny idea for later",
-    imageUrl: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-    lastEdited: "2023-05-09T08:45:00Z",
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
 
 const CreatorDashboard = () => {
   useProtectedRoute();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
-  const [memes, setMemes] = useState(MOCK_USER_MEMES);
-  const [drafts, setDrafts] = useState(MOCK_USER_DRAFTS);
+  const [memes, setMemes] = useState<any[]>([]);
+  const [drafts, setDrafts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("my-memes");
   const [statsLoading, setStatsLoading] = useState(false);
 
-  // In a real app, you'd fetch the user's memes and stats
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       setStatsLoading(true);
-      
-      // Simulate API call
-      setTimeout(() => {
+      // Fetch user's memes
+      const fetchMemes = async () => {
+        const { data, error } = await supabase
+          .from('memes')
+          .select('*')
+          .eq('creator_id', user.id)
+          .order('created_at', { ascending: false });
+        if (!error) setMemes(data || []);
         setStatsLoading(false);
-      }, 800);
+      };
+      fetchMemes();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
-  const handleDeleteMeme = (memeId: string) => {
-    // In a real app, this would call an API to delete the meme
-    setMemes(memes.filter(meme => meme.id !== memeId));
-    toast({
-      title: "Meme deleted",
-      description: "Your meme has been successfully deleted.",
-    });
+  const handleDeleteMeme = async (memeId: string) => {
+    // Delete meme from DB
+    const { error } = await supabase.from('memes').delete().eq('id', memeId);
+    if (!error) {
+      setMemes(memes.filter(meme => meme.id !== memeId));
+      toast({
+        title: "Meme deleted",
+        description: "Your meme has been successfully deleted.",
+      });
+    }
   };
 
   const handleEditMeme = (memeId: string) => {
-    // In a real app, this would navigate to the edit page
     toast({
       title: "Edit caption",
       description: "Redirecting to edit page...",
     });
   };
 
-  const handleDeleteDraft = (draftId: string) => {
-    // In a real app, this would call an API to delete the draft
-    setDrafts(drafts.filter(draft => draft.id !== draftId));
-    toast({
-      title: "Draft deleted",
-      description: "Your draft has been successfully deleted.",
-    });
-  };
-
   if (isLoading) return <Layout><div className="container-layout py-8">Loading...</div></Layout>;
-  if (!isAuthenticated) return null; // This should be handled by useProtectedRoute
+  if (!isAuthenticated) return null;
 
   return (
     <Layout>
@@ -158,7 +91,7 @@ const CreatorDashboard = () => {
                   {statsLoading ? (
                     <span className="animate-pulse">...</span>
                   ) : (
-                    memes.reduce((total, meme) => total + meme.voteCount, 0).toLocaleString()
+                    memes.reduce((total, meme) => total + (meme.vote_count || 0), 0).toLocaleString()
                   )}
                 </h3>
                 <p className="text-gray-500">Total Votes</p>
@@ -176,7 +109,7 @@ const CreatorDashboard = () => {
                   {statsLoading ? (
                     <span className="animate-pulse">...</span>
                   ) : (
-                    memes.reduce((total, meme) => total + (meme.stats?.comments || 0), 0).toLocaleString()
+                    memes.reduce((total, meme) => total + (meme.comment_count || 0), 0).toLocaleString()
                   )}
                 </h3>
                 <p className="text-gray-500">Total Comments</p>
@@ -194,7 +127,7 @@ const CreatorDashboard = () => {
                   {statsLoading ? (
                     <span className="animate-pulse">...</span>
                   ) : (
-                    memes.reduce((total, meme) => total + (meme.stats?.views || 0), 0).toLocaleString()
+                    memes.reduce((total, meme) => total + (meme.view_count || 0), 0).toLocaleString()
                   )}
                 </h3>
                 <p className="text-gray-500">Total Views</p>
@@ -227,9 +160,19 @@ const CreatorDashboard = () => {
             ) : (
               <div className="space-y-4">
                 {memes.map(meme => (
-                  <MemeStats 
-                    key={meme.id} 
-                    meme={meme} 
+                  <MemeStats
+                    key={meme.id}
+                    meme={{
+                      id: meme.id,
+                      title: meme.title,
+                      imageUrl: meme.image_url,
+                      createdAt: meme.created_at,
+                      voteCount: meme.vote_count,
+                      stats: {
+                        views: meme.view_count,
+                        comments: meme.comment_count,
+                      },
+                    }}
                     onDelete={handleDeleteMeme}
                     onEdit={handleEditMeme}
                   />
@@ -239,42 +182,9 @@ const CreatorDashboard = () => {
           </TabsContent>
 
           <TabsContent value="drafts" className="space-y-6">
-            {drafts.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500">You don't have any drafts.</p>
-                <Button asChild className="mt-4">
-                  <Link to="/create">Create a Meme</Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {drafts.map(draft => (
-                  <div key={draft.id} className="border rounded-lg overflow-hidden">
-                    <div className="aspect-square relative">
-                      <img 
-                        src={draft.imageUrl} 
-                        alt={draft.title} 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
-                        <p className="text-white p-4 font-medium">{draft.title}</p>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <p className="text-sm text-gray-500">Last edited: {new Date(draft.lastEdited).toLocaleDateString()}</p>
-                      <div className="mt-2 flex justify-between">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/create?draft=${draft.id}`}>Edit</Link>
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteDraft(draft.id)}>
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="text-center py-12">
+              <p className="text-gray-500">Drafts feature coming soon.</p>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

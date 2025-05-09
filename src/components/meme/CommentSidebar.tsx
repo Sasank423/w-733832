@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -10,41 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from '@/components/ui/motion';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { UserWithProfile } from '@/types/database';
-
-// Mock comments data - same as in CommentSection.tsx
-const MOCK_COMMENTS = [
-  {
-    id: 'comment1',
-    text: 'This is hilarious! Been there too many times 😂',
-    createdAt: '2023-05-08T14:23:00Z',
-    user: {
-      id: 'user2',
-      username: 'NightCoder',
-      avatar: '',
-    },
-  },
-  {
-    id: 'comment2',
-    text: 'I showed this to my non-programmer friends and they didn\'t get it. Their loss!',
-    createdAt: '2023-05-08T15:45:00Z',
-    user: {
-      id: 'user3',
-      username: 'CoffeeAddict',
-      avatar: '',
-    },
-  },
-  {
-    id: 'comment3',
-    text: 'Too real. I need this on a t-shirt.',
-    createdAt: '2023-05-09T09:12:00Z',
-    user: {
-      id: 'user5',
-      username: 'CleanCoder',
-      avatar: '',
-    },
-  },
-];
+import { useComments, useAddCommentMutation } from '@/hooks/useComments';
 
 interface CommentSidebarProps {
   memeId: string;
@@ -52,14 +17,13 @@ interface CommentSidebarProps {
 }
 
 const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
-  const [comments, setComments] = useState(MOCK_COMMENTS);
   const [commentText, setCommentText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [remainingChars, setRemainingChars] = useState(140);
   const { user, profile, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
-  
+  const { data: comments = [], isLoading } = useComments(memeId);
+  const addCommentMutation = useAddCommentMutation();
   const MAX_CHARS = 140;
   
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -79,7 +43,6 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
       });
       return;
     }
-    
     if (!commentText.trim()) {
       toast({
         title: "Empty comment",
@@ -88,32 +51,15 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
       });
       return;
     }
-    
-    setIsSubmitting(true);
-    
-    // In a real app, this would be an API call
-    setTimeout(() => {
-      const newComment = {
-        id: `comment${Date.now()}`,
-        text: commentText.trim(),
-        createdAt: new Date().toISOString(),
-        user: {
-          id: user?.id || '',
-          username: profile?.username || '',
-          avatar: profile?.avatar || '',
-        },
-      };
-      
-      setComments([newComment, ...comments]);
-      setCommentText('');
-      setRemainingChars(MAX_CHARS);
-      setIsSubmitting(false);
-      
-      toast({
-        title: "Comment posted",
-        description: "Your comment has been added successfully.",
-      });
-    }, 500);
+    addCommentMutation.mutate(
+      { memeId, text: commentText.trim() },
+      {
+        onSuccess: () => {
+          setCommentText('');
+          setRemainingChars(MAX_CHARS);
+        }
+      }
+    );
   };
   
   const handleFlagComment = (commentId: string) => {
@@ -142,9 +88,9 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
   };
   
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col max-w-[500px] w-full mx-auto">
       <CardHeader className="flex-row justify-between items-center py-3 border-b">
-        <h3 className="text-lg font-semibold">Comments ({comments.length})</h3>
+        <h3 className="text-lg font-semibold">Comments ({isLoading ? '...' : comments.length})</h3>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
@@ -153,12 +99,16 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
       <CardContent className="p-0 flex-grow overflow-hidden">
         <ScrollArea className="h-[calc(100vh-300px)]">
           <div className="p-4 space-y-4">
-            {comments.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Loading comments...</p>
+              </div>
+            ) : comments.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <p>No comments yet. Be the first to comment!</p>
               </div>
             ) : (
-              comments.map((comment, index) => (
+              comments.map((comment: any, index: number) => (
                 <motion.div 
                   key={comment.id}
                   initial={{ opacity: index < 3 ? 1 : 0, y: index < 3 ? 0 : 20 }}
@@ -168,20 +118,20 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
                 >
                   <div className="flex space-x-3">
                     <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={comment.user.avatar} />
+                      <AvatarImage src={comment.user?.avatar} />
                       <AvatarFallback className="bg-brand-purple text-white">
-                        {comment.user.username.charAt(0).toUpperCase()}
+                        {comment.user?.username?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-grow">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <Link to={`/user/${comment.user.id}`} className="font-medium hover:underline">
-                            {comment.user.username}
+                          <Link to={`/user/${comment.user?.id}`} className="font-medium hover:underline">
+                            {comment.user?.username}
                           </Link>
                           <span className="text-xs text-gray-500">
-                            {getTimeAgo(comment.createdAt)}
+                            {getTimeAgo(comment.created_at)}
                           </span>
                         </div>
                         
@@ -218,7 +168,7 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
             value={commentText}
             onChange={handleCommentChange}
             className="min-h-[80px] w-full"
-            disabled={!isAuthenticated || isSubmitting}
+            disabled={!isAuthenticated || addCommentMutation.isPending}
           />
           
           <div className="flex items-center justify-between">
@@ -228,10 +178,10 @@ const CommentSidebar = ({ memeId, onClose }: CommentSidebarProps) => {
             
             <Button 
               onClick={handleSubmitComment} 
-              disabled={!commentText.trim() || isSubmitting || !isAuthenticated}
+              disabled={!commentText.trim() || addCommentMutation.isPending || !isAuthenticated}
               size="sm"
             >
-              {isSubmitting ? 'Posting...' : 'Post Comment'}
+              {addCommentMutation.isPending ? 'Posting...' : 'Post Comment'}
             </Button>
           </div>
           

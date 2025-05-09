@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,17 +34,19 @@ const LoginForm = ({ onSwitchToSignup }: LoginFormProps) => {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
+      console.log('LoginForm: Starting login process');
       setIsLoading(true);
       await login(data.email, data.password);
-      // The useEffect in AuthModal will handle closing when isAuthenticated becomes true
+      console.log('LoginForm: Login successful');
     } catch (error: any) {
-      console.error(error);
+      console.error('LoginForm: Login failed:', error);
       toast({
         title: "Error",
         description: error.message || "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     } finally {
+      console.log('LoginForm: Login process completed, setting loading to false');
       setIsLoading(false);
     }
   };

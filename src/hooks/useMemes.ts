@@ -211,53 +211,90 @@ export const useVoteMutation = () => {
   return useMutation({
     mutationFn: async ({ memeId, value }: { memeId: string, value: number }) => {
       if (!user) throw new Error('You must be logged in to vote');
-      
-      // Check if user already voted
-      const { data: existingVote } = await supabase
+      // value: 1 for like, -1 for dislike
+
+      // Get current vote
+      const { data: existingVote, error: voteError } = await supabase
         .from('votes')
         .select('id, value')
         .eq('meme_id', memeId)
         .eq('user_id', user.id)
         .maybeSingle();
-      
+      if (voteError) throw voteError;
+
+      // Get current meme data
+      const { data: memeData, error: memeError } = await supabase
+        .from('memes')
+        .select('vote_count, dislike_count')
+        .eq('id', memeId)
+        .single();
+      if (memeError) throw memeError;
+      let newVoteCount = memeData.vote_count || 0;
+      let newDislikeCount = memeData.dislike_count || 0;
+
       if (existingVote) {
-        // User already voted, update if different value or delete if same value
-        if (existingVote.value !== value) {
-          // Update to new vote value
-          const { data, error } = await supabase
-            .from('votes')
-            .update({ value })
-            .eq('id', existingVote.id)
-            .select();
-          
-          if (error) throw error;
-          return data;
-        } else {
-          // Remove vote (toggle off)
-          const { error } = await supabase
+        if (existingVote.value === value) {
+          // User clicked the same button again: remove vote
+          const { error: deleteError } = await supabase
             .from('votes')
             .delete()
             .eq('id', existingVote.id);
-          
-          if (error) throw error;
+          if (deleteError) throw deleteError;
+          if (value === 1) newVoteCount -= 1;
+          else newDislikeCount -= 1;
+          // Update meme
+          const { error: updateError } = await supabase
+            .from('memes')
+            .update({ vote_count: newVoteCount, dislike_count: newDislikeCount })
+            .eq('id', memeId);
+          if (updateError) throw updateError;
           return null;
+        } else {
+          // User is switching vote (like <-> dislike)
+          // Update vote
+          const { data: updatedVote, error: updateVoteError } = await supabase
+            .from('votes')
+            .update({ value })
+            .eq('id', existingVote.id)
+            .select()
+            .single();
+          if (updateVoteError) throw updateVoteError;
+          if (value === 1) {
+            newVoteCount += 1;
+            newDislikeCount -= 1;
+          } else {
+            newVoteCount -= 1;
+            newDislikeCount += 1;
+          }
+          // Update meme
+          const { error: updateError } = await supabase
+            .from('memes')
+            .update({ vote_count: newVoteCount, dislike_count: newDislikeCount })
+            .eq('id', memeId);
+          if (updateError) throw updateError;
+          return updatedVote;
         }
-      } else {
-        // Create new vote
-        const { data, error } = await supabase
-          .from('votes')
-          .insert({
-            meme_id: memeId,
-            user_id: user.id,
-            value
-          })
-          .select();
-        
-        if (error) throw error;
-        return data;
       }
+
+      // No vote exists, create new vote
+      const { data: newVote, error: insertError } = await supabase
+        .from('votes')
+        .insert({ meme_id: memeId, user_id: user.id, value })
+        .select()
+        .single();
+      if (insertError) throw insertError;
+      if (value === 1) newVoteCount += 1;
+      else newDislikeCount += 1;
+      // Update meme
+      const { error: updateError } = await supabase
+        .from('memes')
+        .update({ vote_count: newVoteCount, dislike_count: newDislikeCount })
+        .eq('id', memeId);
+      if (updateError) throw updateError;
+      return newVote;
     },
     onSuccess: (_, variables) => {
+      // Invalidate all relevant queries to ensure UI is in sync
       queryClient.invalidateQueries({ queryKey: ['vote', variables.memeId] });
       queryClient.invalidateQueries({ queryKey: ['meme', variables.memeId] });
       queryClient.invalidateQueries({ queryKey: ['meme-feed'] });

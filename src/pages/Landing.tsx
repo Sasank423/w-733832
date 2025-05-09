@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/layout/Layout';
@@ -6,9 +5,24 @@ import FeaturedMeme from '@/components/meme/FeaturedMeme';
 import TrendingMemes from '@/components/meme/TrendingMemes';
 import { useFeaturedMeme } from '@/hooks/useMemes';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 const Landing = () => {
   const { data: featuredMeme, isLoading: isLoadingFeatured } = useFeaturedMeme();
+  const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
+
+  const handleCreateMemeClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      toast({
+        title: 'Please log in',
+        description: 'You need to be logged in to create a meme.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <Layout>
@@ -24,8 +38,15 @@ const Landing = () => {
             <Button size="lg" asChild>
               <Link to="/browse">Browse Memes</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/create">Create a Meme</Link>
+            <Button size="lg" variant="outline" asChild title={!isAuthenticated ? 'Log in to create memes' : ''}>
+              <Link
+                to={isAuthenticated ? "/create" : "#"}
+                tabIndex={!isAuthenticated ? -1 : 0}
+                aria-disabled={!isAuthenticated}
+                onClick={handleCreateMemeClick}
+              >
+                Create a Meme
+              </Link>
             </Button>
           </div>
         </div>
@@ -43,18 +64,21 @@ const Landing = () => {
           ) : (
             <div className="text-center p-12 border rounded-lg">
               <p className="text-gray-500">No featured memes yet. Be the first to create one!</p>
-              <Button className="mt-4" asChild>
-                <Link to="/create">Create a Meme</Link>
+              <Button className="mt-4" asChild title={!isAuthenticated ? 'Log in to create memes' : ''}>
+                <Link
+                  to={isAuthenticated ? "/create" : "#"}
+                  tabIndex={!isAuthenticated ? -1 : 0}
+                  aria-disabled={!isAuthenticated}
+                  onClick={handleCreateMemeClick}
+                >
+                  Create a Meme
+                </Link>
               </Button>
             </div>
           )}
         </div>
         
-        {/* Trending Memes */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Trending Now</h2>
-          <TrendingMemes />
-        </div>
+        {/* Trending Memes block removed */}
       </section>
     </Layout>
   );

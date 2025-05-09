@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Eye, MessageSquare, Heart, Pen, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -57,20 +56,16 @@ const MemeStats = ({ meme, onDelete, onEdit }: MemeStatsProps) => {
   return (
     <div className="flex flex-col md:flex-row border rounded-lg p-4 gap-4">
       <div className="md:w-32 w-full h-32 flex-shrink-0">
-        <Link to={`/meme/${meme.id}`}>
-          <img 
-            src={meme.imageUrl} 
-            alt={meme.title}
-            className="w-full h-full object-cover rounded-md"
-          />
-        </Link>
+        <img 
+          src={meme.imageUrl} 
+          alt={meme.title}
+          className="w-full h-full object-cover rounded-md"
+        />
       </div>
       
       <div className="flex-grow">
         <div className="flex justify-between items-start">
-          <Link to={`/meme/${meme.id}`}>
-            <h3 className="text-lg font-medium hover:text-brand-purple">{meme.title}</h3>
-          </Link>
+          <span className="text-lg font-medium">{meme.title}</span>
           <span className="text-sm text-gray-500">{new Date(meme.createdAt).toLocaleDateString()}</span>
         </div>
         

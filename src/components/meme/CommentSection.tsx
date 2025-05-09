@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -96,7 +95,7 @@ const CommentSection = ({ memeId }: CommentSectionProps) => {
   };
   
   return (
-    <div className="comments-section">
+    <div className="comments-section w-full max-w-[500px] mx-auto">
       <h3 className="text-xl font-bold mb-6">
         Comments ({isLoading ? '...' : comments?.length || 0})
       </h3>

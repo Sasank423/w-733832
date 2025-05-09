@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -159,21 +158,19 @@ const MemeCard = ({ meme, showBackButton = false }: MemeCardProps) => {
       )}
       
       <div className="relative aspect-square overflow-hidden">
-        <Link to={`/meme/${meme.id}`}>
-          <img 
-            src={meme.imageUrl} 
-            alt={meme.title} 
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end">
-            <p className="text-white p-4 font-medium text-lg">{meme.title}</p>
-          </div>
-        </Link>
+        <img 
+          src={meme.imageUrl} 
+          alt={meme.title} 
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end">
+          <p className="text-white p-4 font-medium text-lg">{meme.title}</p>
+        </div>
       </div>
       
       <div className="p-4">
         <div className="flex justify-between items-start mb-3">
-          <Link to={`/meme/${meme.id}`} className="meme-title hover:text-brand-purple-dark">{meme.title}</Link>
+          <span className="meme-title font-bold">{meme.title}</span>
           
           <div className="flex space-x-1">
             {isAuthenticated && (

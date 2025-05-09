@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -18,17 +17,32 @@ interface AuthModalProps {
 
 const AuthModal = ({ isOpen, onClose, initialView }: AuthModalProps) => {
   const [view, setView] = useState<'login' | 'signup'>(initialView);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   
-  // Automatically close modal when user becomes authenticated
+  // Reset view when modal opens
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isOpen) {
+      console.log('AuthModal: Modal opened, resetting view to:', initialView);
+      setView(initialView);
+    }
+  }, [isOpen, initialView]);
+  
+  // Only close modal when authentication is complete and not loading
+  useEffect(() => {
+    console.log('AuthModal: Auth state changed:', { isAuthenticated, isLoading });
+    if (isAuthenticated && !isLoading) {
+      console.log('AuthModal: Authentication complete, closing modal');
       onClose();
     }
-  }, [isAuthenticated, onClose]);
+  }, [isAuthenticated, isLoading, onClose]);
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      console.log('AuthModal: Dialog open state changed:', open);
+      if (!open) {
+        onClose();
+      }
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">
@@ -38,9 +52,15 @@ const AuthModal = ({ isOpen, onClose, initialView }: AuthModalProps) => {
         
         <div className="py-4">
           {view === 'login' ? (
-            <LoginForm onSwitchToSignup={() => setView('signup')} />
+            <LoginForm onSwitchToSignup={() => {
+              console.log('AuthModal: Switching to signup view');
+              setView('signup');
+            }} />
           ) : (
-            <SignupForm onSwitchToLogin={() => setView('login')} />
+            <SignupForm onSwitchToLogin={() => {
+              console.log('AuthModal: Switching to login view');
+              setView('login');
+            }} />
           )}
         </div>
       </DialogContent>
