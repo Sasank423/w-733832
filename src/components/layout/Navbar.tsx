@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, Search, Moon, Sun, Eye } from "lucide-react";
+import { Menu, Search, Eye } from "lucide-react";
 import UserMenu from "@/components/user/UserMenu";
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/auth/AuthModal';
 import NotificationCenter from '@/components/user/NotificationCenter';
-import { useTheme } from '@/hooks/useTheme';
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavbarProps {
   isCollapsed: boolean;
@@ -16,8 +16,7 @@ interface NavbarProps {
 }
 
 const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
-  const { user, isAuthenticated } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { user, profile, isAuthenticated } = useAuth();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -26,10 +25,6 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
   const openModal = (type: 'login' | 'signup') => {
     setAuthModalType(type);
     setIsAuthModalOpen(true);
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const navbarClasses = isCollapsed
@@ -64,14 +59,7 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
 
           {/* Navigation Links - Desktop */}
           <div className="hidden md:flex items-center space-x-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="mr-2"
-            >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
+            <ThemeToggle />
             
             <Button variant="ghost" size="sm" asChild className="mr-2">
               <Link to="/browse">
@@ -79,13 +67,13 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
               </Link>
             </Button>
             
-            {isAuthenticated ? (
+            {isAuthenticated && profile ? (
               <>
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/create">Create</Link>
                 </Button>
                 <NotificationCenter />
-                <UserMenu user={user} />
+                <UserMenu user={profile} />
               </>
             ) : (
               <>
@@ -127,21 +115,13 @@ const Navbar = ({ isCollapsed, toggleCollapse }: NavbarProps) => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden pt-2 pb-3 space-y-1 animate-fade-in">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="flex items-center w-full justify-start px-3 py-2"
-            >
-              {theme === 'dark' ? <Sun className="h-5 w-5 mr-2" /> : <Moon className="h-5 w-5 mr-2" />}
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </Button>
+            <ThemeToggle />
             
             <Link to="/browse" className="flex items-center block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
               <Eye className="h-5 w-5 mr-2" /> Browse Memes
             </Link>
             
-            {isAuthenticated ? (
+            {isAuthenticated && profile ? (
               <>
                 <Link to="/create" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-accent">
                   Create

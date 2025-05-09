@@ -13,7 +13,7 @@ export const useFeaturedMeme = () => {
         .from('memes')
         .select(`
           *,
-          creator:profiles!memes_creator_id_fkey(id, username, avatar)
+          creator:profiles(id, username, avatar, created_at, updated_at)
         `)
         .eq('is_meme_of_day', true)
         .limit(1)
@@ -29,7 +29,7 @@ export const useFeaturedMeme = () => {
           .from('memes')
           .select(`
             *,
-            creator:profiles!memes_creator_id_fkey(id, username, avatar)
+            creator:profiles(id, username, avatar, created_at, updated_at)
           `)
           .order('vote_count', { ascending: false })
           .limit(1)
@@ -56,7 +56,7 @@ export const useTrendingMemes = (category: 'rising' | 'weekly' | 'allTime', limi
         .from('memes')
         .select(`
           *,
-          creator:profiles!memes_creator_id_fkey(id, username, avatar)
+          creator:profiles(id, username, avatar, created_at, updated_at)
         `)
         .limit(limit);
       
@@ -99,7 +99,7 @@ export const useMemeFeed = (filter: string, page: number = 1, limit: number = 10
         .from('memes')
         .select(`
           *,
-          creator:profiles!memes_creator_id_fkey(id, username, avatar)
+          creator:profiles(id, username, avatar, created_at, updated_at)
         `);
       
       // Apply different sorting based on filter
@@ -149,7 +149,7 @@ export const useMeme = (id: string | undefined) => {
     queryFn: async (): Promise<Meme | null> => {
       if (!id) return null;
       
-      // Update view count using the edge function
+      // Try to update view count using the edge function
       try {
         await supabase.functions.invoke('increment_view_count', {
           body: { memeId: id }
@@ -162,7 +162,7 @@ export const useMeme = (id: string | undefined) => {
         .from('memes')
         .select(`
           *,
-          creator:profiles!memes_creator_id_fkey(id, username, avatar),
+          creator:profiles(id, username, avatar, created_at, updated_at),
           tags:meme_tags(tag_id, tags:tags(id, name))
         `)
         .eq('id', id)

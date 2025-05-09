@@ -22,56 +22,73 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Meme } from "@/types/database";
 
-// Mock data for user dashboard
+// Mock data for user dashboard - to be replaced with real data
 const MOCK_USER_MEMES = [
   {
     id: "meme1",
     title: "When the code finally works",
-    imageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
-    createdAt: "2023-05-08T12:00:00Z",
-    voteCount: 1562,
+    image_url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
+    description: "That feeling when your code compiles without errors on the first try. A miracle indeed!",
+    created_at: "2023-05-08T12:00:00Z",
+    updated_at: "2023-05-08T12:00:00Z",
+    vote_count: 1562,
+    view_count: 4872,
+    comment_count: 124,
+    creator_id: "user1",
+    is_meme_of_day: true,
+    is_weekly_champion: false,
     creator: {
       id: "user1",
       username: "CodeMaster",
-    },
-    stats: {
-      views: 4872,
-      comments: 124,
-    },
-    isMemeOfTheDay: true,
+      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=CodeMaster",
+      created_at: "2023-01-01T00:00:00Z",
+      updated_at: "2023-01-01T00:00:00Z"
+    }
   },
   {
     id: "meme2",
     title: "Debugging at 2am",
-    imageUrl: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
-    createdAt: "2023-05-07T10:30:00Z",
-    voteCount: 453,
+    image_url: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
+    description: "When you're still hunting that elusive bug in the middle of the night.",
+    created_at: "2023-05-07T10:30:00Z",
+    updated_at: "2023-05-07T10:30:00Z",
+    vote_count: 453,
+    view_count: 1872,
+    comment_count: 42,
+    creator_id: "user2",
+    is_meme_of_day: false,
+    is_weekly_champion: false,
     creator: {
       id: "user2",
       username: "NightCoder",
-    },
-    stats: {
-      views: 1872,
-      comments: 42,
-    },
+      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=NightCoder",
+      created_at: "2023-01-01T00:00:00Z",
+      updated_at: "2023-01-01T00:00:00Z"
+    }
   },
   {
     id: "meme3",
     title: "Monday mornings be like",
-    imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b",
-    createdAt: "2023-05-06T09:15:00Z",
-    voteCount: 287,
+    image_url: "https://images.unsplash.com/photo-1501854140801-50d01698950b",
+    description: "That moment when your alarm goes off and reality hits.",
+    created_at: "2023-05-06T09:15:00Z",
+    updated_at: "2023-05-06T09:15:00Z",
+    vote_count: 287,
+    view_count: 972,
+    comment_count: 28,
+    creator_id: "user3",
+    is_meme_of_day: false,
+    is_weekly_champion: true,
     creator: {
       id: "user3",
       username: "CoffeeAddict",
-    },
-    stats: {
-      views: 972,
-      comments: 28,
-    },
-    isWeeklyChampion: true,
-  },
+      avatar: "https://api.dicebear.com/7.x/lorelei/svg?seed=CoffeeAddict",
+      created_at: "2023-01-01T00:00:00Z",
+      updated_at: "2023-01-01T00:00:00Z"
+    }
+  }
 ];
 
 const MOCK_USER_DRAFTS = [
@@ -90,33 +107,49 @@ const MOCK_USER_DRAFTS = [
 ];
 
 // Mock data for meme of the day
-const MOCK_MEME_OF_THE_DAY = {
+const MOCK_MEME_OF_THE_DAY: Meme = {
   id: 'meme1',
   title: 'When the code finally works',
-  imageUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5',
+  image_url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5',
   description: 'That feeling when your code compiles without errors on the first try. A miracle indeed!',
+  creator_id: 'user1',
+  vote_count: 1562,
+  view_count: 4872,
+  comment_count: 124,
+  created_at: '2023-05-08T12:00:00Z',
+  updated_at: '2023-05-08T12:00:00Z',
+  is_meme_of_day: true,
+  is_weekly_champion: false,
   creator: {
     id: 'user1',
     username: 'CodeMaster',
-  },
-  voteCount: 1562,
-  createdAt: '2023-05-08T12:00:00Z',
-  isMemeOfTheDay: true,
+    avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=CodeMaster',
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z'
+  }
 };
 
 // Mock data for weekly champion
-const MOCK_WEEKLY_CHAMPION = {
+const MOCK_WEEKLY_CHAMPION: Meme = {
   id: 'meme3',
   title: 'Monday mornings be like',
-  imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b',
+  image_url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b',
   description: 'That moment when your alarm goes off and reality hits. Monday mornings are truly something else.',
+  creator_id: 'user3',
+  vote_count: 987,
+  view_count: 2453,
+  comment_count: 57,
+  created_at: '2023-05-06T09:15:00Z',
+  updated_at: '2023-05-06T09:15:00Z',
+  is_meme_of_day: false,
+  is_weekly_champion: true,
   creator: {
     id: 'user3',
     username: 'CoffeeAddict',
-  },
-  voteCount: 987,
-  createdAt: '2023-05-06T09:15:00Z',
-  isWeeklyChampion: true,
+    avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=CoffeeAddict',
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z'
+  }
 };
 
 const UserDashboard = () => {
@@ -132,13 +165,13 @@ const UserDashboard = () => {
   useEffect(() => {
     // In a real app, you'd fetch the user's memes based on the sort option
     if (sortOption === "popular") {
-      setMemes([...MOCK_USER_MEMES].sort((a, b) => b.voteCount - a.voteCount));
+      setMemes([...MOCK_USER_MEMES].sort((a, b) => b.vote_count - a.vote_count));
     } else if (sortOption === "commented") {
-      setMemes([...MOCK_USER_MEMES].sort((a, b) => (b.stats?.comments || 0) - (a.stats?.comments || 0)));
+      setMemes([...MOCK_USER_MEMES].sort((a, b) => (b.comment_count || 0) - (a.comment_count || 0)));
     } else {
       // default "newest"
       setMemes([...MOCK_USER_MEMES].sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
     }
   }, [sortOption]);
 
@@ -222,7 +255,7 @@ const UserDashboard = () => {
                       <div className="relative md:w-2/3 w-full">
                         <Link to={`/meme/${MOCK_WEEKLY_CHAMPION.id}`}>
                           <img 
-                            src={MOCK_WEEKLY_CHAMPION.imageUrl} 
+                            src={MOCK_WEEKLY_CHAMPION.image_url} 
                             alt={MOCK_WEEKLY_CHAMPION.title}
                             className="w-full h-64 md:h-full object-cover"
                           />
@@ -253,7 +286,7 @@ const UserDashboard = () => {
                               <Link to={`/user/${MOCK_WEEKLY_CHAMPION.creator.id}`} className="text-sm font-medium hover:text-amber-500">
                                 {MOCK_WEEKLY_CHAMPION.creator.username}
                               </Link>
-                              <p className="text-xs text-gray-500">{MOCK_WEEKLY_CHAMPION.voteCount} votes</p>
+                              <p className="text-xs text-gray-500">{MOCK_WEEKLY_CHAMPION.vote_count} votes</p>
                             </div>
                           </div>
                           
@@ -332,15 +365,15 @@ const UserDashboard = () => {
                     {viewMode === 'list' ? (
                       <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0 w-24 h-24 relative rounded overflow-hidden">
-                          <img src={meme.imageUrl} alt={meme.title} className="w-full h-full object-cover" />
+                          <img src={meme.image_url} alt={meme.title} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-grow">
                           <h3 className="font-medium">{meme.title}</h3>
                           <div className="flex space-x-4 text-sm text-gray-500 mt-1">
-                            <span>{new Date(meme.createdAt).toLocaleDateString()}</span>
-                            <span>{meme.voteCount} votes</span>
-                            <span>{meme.stats?.views} views</span>
-                            <span>{meme.stats?.comments} comments</span>
+                            <span>{new Date(meme.created_at).toLocaleDateString()}</span>
+                            <span>{meme.vote_count} votes</span>
+                            <span>{meme.view_count} views</span>
+                            <span>{meme.comment_count} comments</span>
                           </div>
                           <div className="mt-2 space-x-2">
                             <Button variant="outline" size="sm" asChild>
