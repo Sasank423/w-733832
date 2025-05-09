@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -16,7 +15,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LayoutGrid, List, Plus } from "lucide-react";
+import { LayoutGrid, List, Plus, Trophy, TrendingUp } from "lucide-react";
+import FeaturedMeme from '@/components/meme/FeaturedMeme';
+import TrendingMemes from '@/components/meme/TrendingMemes';
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import Avatar from "@/components/ui/avatar";
+import AvatarImage from "@/components/ui/avatar-image";
+import AvatarFallback from "@/components/ui/avatar-fallback";
 
 // Mock data for user dashboard
 const MOCK_USER_MEMES = [
@@ -65,6 +72,7 @@ const MOCK_USER_MEMES = [
       views: 972,
       comments: 28,
     },
+    isWeeklyChampion: true,
   },
 ];
 
@@ -83,6 +91,36 @@ const MOCK_USER_DRAFTS = [
   },
 ];
 
+// Mock data for meme of the day
+const MOCK_MEME_OF_THE_DAY = {
+  id: 'meme1',
+  title: 'When the code finally works',
+  imageUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5',
+  description: 'That feeling when your code compiles without errors on the first try. A miracle indeed!',
+  creator: {
+    id: 'user1',
+    username: 'CodeMaster',
+  },
+  voteCount: 1562,
+  createdAt: '2023-05-08T12:00:00Z',
+  isMemeOfTheDay: true,
+};
+
+// Mock data for weekly champion
+const MOCK_WEEKLY_CHAMPION = {
+  id: 'meme3',
+  title: 'Monday mornings be like',
+  imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b',
+  description: 'That moment when your alarm goes off and reality hits. Monday mornings are truly something else.',
+  creator: {
+    id: 'user3',
+    username: 'CoffeeAddict',
+  },
+  voteCount: 987,
+  createdAt: '2023-05-06T09:15:00Z',
+  isWeeklyChampion: true,
+};
+
 const UserDashboard = () => {
   useProtectedRoute();
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -91,6 +129,7 @@ const UserDashboard = () => {
   const [sortOption, setSortOption] = useState("newest");
   const [memes, setMemes] = useState(MOCK_USER_MEMES);
   const [drafts, setDrafts] = useState(MOCK_USER_DRAFTS);
+  const [activeTab, setActiveTab] = useState("highlights");
 
   useEffect(() => {
     // In a real app, you'd fetch the user's memes based on the sort option
@@ -139,12 +178,105 @@ const UserDashboard = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="my-memes" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
+            <TabsTrigger value="highlights">Highlights</TabsTrigger>
             <TabsTrigger value="my-memes">My Memes</TabsTrigger>
             <TabsTrigger value="drafts">Drafts</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="highlights" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Meme of the Day section */}
+              <Card className="overflow-hidden bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 border-purple-100 dark:border-purple-900/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-4">
+                    <span className="text-xl font-bold text-brand-purple flex items-center gap-2">
+                      <Trophy className="h-5 w-5" /> Meme of the Day
+                    </span>
+                  </div>
+                  <FeaturedMeme meme={MOCK_MEME_OF_THE_DAY} />
+                </CardContent>
+              </Card>
+
+              {/* Weekly Champion section */}
+              <Card className="overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-100 dark:border-amber-900/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-4">
+                    <span className="text-xl font-bold text-amber-500 flex items-center gap-2">
+                      <Trophy className="h-5 w-5" /> Weekly Champion
+                    </span>
+                  </div>
+                  <div className="relative overflow-hidden rounded-xl">
+                    <div className="absolute top-4 right-4 z-10">
+                      <Badge variant="secondary" className="bg-amber-500 text-white border-none">Weekly Champion</Badge>
+                    </div>
+                    
+                    <div className="flex flex-col md:flex-row rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+                      <div className="relative md:w-2/3 w-full">
+                        <Link to={`/meme/${MOCK_WEEKLY_CHAMPION.id}`}>
+                          <img 
+                            src={MOCK_WEEKLY_CHAMPION.imageUrl} 
+                            alt={MOCK_WEEKLY_CHAMPION.title}
+                            className="w-full h-64 md:h-full object-cover"
+                          />
+                        </Link>
+                      </div>
+                      
+                      <div className="md:w-1/3 w-full p-6 flex flex-col justify-between">
+                        <div>
+                          <Link to={`/meme/${MOCK_WEEKLY_CHAMPION.id}`}>
+                            <h2 className="text-2xl font-bold mb-2 hover:text-amber-500 transition-colors">
+                              {MOCK_WEEKLY_CHAMPION.title}
+                            </h2>
+                          </Link>
+                          <p className="text-gray-600 dark:text-gray-400 mb-4">
+                            {MOCK_WEEKLY_CHAMPION.description}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <div className="flex items-center mb-4">
+                            <Avatar className="h-8 w-8 mr-2">
+                              <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${MOCK_WEEKLY_CHAMPION.creator.username}`} />
+                              <AvatarFallback className="bg-amber-500 text-white">
+                                {MOCK_WEEKLY_CHAMPION.creator.username.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <Link to={`/user/${MOCK_WEEKLY_CHAMPION.creator.id}`} className="text-sm font-medium hover:text-amber-500">
+                                {MOCK_WEEKLY_CHAMPION.creator.username}
+                              </Link>
+                              <p className="text-xs text-gray-500">{MOCK_WEEKLY_CHAMPION.voteCount} votes</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <Button asChild variant="outline">
+                              <Link to={`/meme/${MOCK_WEEKLY_CHAMPION.id}`}>View Meme</Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Trending section */}
+            <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-blue-100 dark:border-blue-900/30">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <span className="text-xl font-bold text-blue-500 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" /> Trending Memes
+                  </span>
+                </div>
+                <TrendingMemes />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="my-memes" className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
@@ -264,26 +396,28 @@ const UserDashboard = () => {
           </TabsContent>
 
           <TabsContent value="activity" className="space-y-6">
-            <div className="border rounded-lg divide-y">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="p-4 flex items-start space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <span className="text-gray-600">U{i}</span>
+            <ScrollArea className="h-[600px] pr-4">
+              <div className="border rounded-lg divide-y">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="p-4 flex items-start space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <span className="text-gray-600">U{i}</span>
+                    </div>
+                    <div>
+                      <p><strong>User{i}</strong> {i % 3 === 0 ? 'commented on' : 'upvoted'} your meme <Link to="/meme/1" className="text-brand-purple hover:underline">"{i % 2 === 0 ? 'Debugging at 2am' : 'When the code finally works'}"</Link></p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(Date.now() - i * 3600000).toLocaleString()}
+                      </p>
+                      {i % 3 === 0 && (
+                        <div className="mt-1 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                          <p className="text-sm">This is hilarious! Been there too many times 😂</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p><strong>User{i}</strong> {i % 3 === 0 ? 'commented on' : 'upvoted'} your meme <Link to="/meme/1" className="text-brand-purple hover:underline">"{i % 2 === 0 ? 'Debugging at 2am' : 'When the code finally works'}"</Link></p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(Date.now() - i * 3600000).toLocaleString()}
-                    </p>
-                    {i % 3 === 0 && (
-                      <div className="mt-1 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                        <p className="text-sm">This is hilarious! Been there too many times 😂</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </div>

@@ -1,31 +1,16 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/layout/Layout';
 import FeedFilters, { FeedType } from '@/components/meme/FeedFilters';
-import FeaturedMeme from '@/components/meme/FeaturedMeme';
-import TrendingMemes from '@/components/meme/TrendingMemes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
-import { ChevronLeft, ChevronRight, ThumbsUp, MessageSquare, Share2 } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data - In a real app, this would come from an API
-const MOCK_MEME_OF_THE_DAY = {
-  id: 'meme1',
-  title: 'When the code finally works',
-  imageUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5',
-  description: 'That feeling when your code compiles without errors on the first try. A miracle indeed!',
-  creator: {
-    id: 'user1',
-    username: 'CodeMaster',
-  },
-  voteCount: 1562,
-  createdAt: '2023-05-08T12:00:00Z',
-  isMemeOfTheDay: true,
-};
-
 const MOCK_MEMES = [
   {
     id: 'meme2',
@@ -95,18 +80,17 @@ const HomePage = () => {
   const [activeFilter, setActiveFilter] = useState<FeedType>('new');
   const [memes, setMemes] = useState(MOCK_MEMES);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentMemeIndex, setCurrentMemeIndex] = useState(0);
   const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const feedRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     // This would be an API call in a real app
     setMemes(MOCK_MEMES);
-    setCurrentMemeIndex(0);
   }, [activeFilter]);
 
   const handleFilterChange = (filter: FeedType) => {
     setActiveFilter(filter);
-    setCurrentMemeIndex(0);
     // In a real app, you'd fetch new data based on the filter
   };
 
@@ -119,120 +103,90 @@ const HomePage = () => {
       setIsLoading(false);
     }, 1000);
   };
-
-  const goToPreviousMeme = () => {
-    setCurrentMemeIndex(prev => (prev === 0 ? memes.length - 1 : prev - 1));
+  
+  const handleVote = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "You need to sign in to like memes.",
+        variant: "destructive",
+      });
+    }
   };
-
-  const goToNextMeme = () => {
-    setCurrentMemeIndex(prev => (prev === memes.length - 1 ? 0 : prev + 1));
-  };
-
-  const currentMeme = memes[currentMemeIndex];
 
   return (
     <Layout>
       <div className="container-layout py-8">
-        {/* Featured meme section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Featured</h2>
-          <FeaturedMeme meme={MOCK_MEME_OF_THE_DAY} />
-        </section>
-        
-        {/* Trending section */}
-        <section className="mb-12">
-          <TrendingMemes />
-        </section>
-        
         {/* Feed section */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Meme Feed</h2>
           <FeedFilters onFilterChange={handleFilterChange} />
           
           {memes.length > 0 && (
-            <div className="max-w-3xl mx-auto my-8">
-              <Card className="overflow-hidden">
-                <CardHeader className="p-4 border-b">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8 mr-1">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${currentMeme.creator.username}`} />
-                        <AvatarFallback>
-                          {currentMeme.creator.username.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <Link to={`/user/${currentMeme.creator.id}`} className="font-medium hover:underline">
-                          {currentMeme.creator.username}
-                        </Link>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(currentMeme.createdAt).toLocaleDateString()}
-                        </p>
+            <div className="max-w-3xl mx-auto my-8 space-y-16" ref={feedRef}>
+              {memes.map((meme) => (
+                <Card key={meme.id} className="overflow-hidden">
+                  <CardHeader className="p-4 border-b">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8 mr-1">
+                          <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${meme.creator.username}`} />
+                          <AvatarFallback>
+                            {meme.creator.username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <Link to={`/user/${meme.creator.id}`} className="font-medium hover:underline">
+                            {meme.creator.username}
+                          </Link>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(meme.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {currentMemeIndex + 1} / {memes.length}
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="p-0">
-                  <Link to={`/meme/${currentMeme.id}`}>
-                    <div className="relative">
-                      <img 
-                        src={currentMeme.imageUrl} 
-                        alt={currentMeme.title}
-                        className="w-full max-h-[70vh] object-contain mx-auto"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          className="rounded-full bg-background/80 backdrop-blur-sm pointer-events-auto"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            goToPreviousMeme();
-                          }}
-                        >
-                          <ChevronLeft className="h-5 w-5" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          className="rounded-full bg-background/80 backdrop-blur-sm pointer-events-auto"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            goToNextMeme();
-                          }}
-                        >
-                          <ChevronRight className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Link>
+                  </CardHeader>
                   
-                  <div className="p-4">
-                    <h3 className="text-xl font-bold">{currentMeme.title}</h3>
-                  </div>
-                </CardContent>
-                
-                <CardFooter className="flex justify-between p-4 border-t">
-                  <div className="flex gap-4">
-                    <Button variant="ghost" size="sm" disabled={!isAuthenticated} className={!isAuthenticated ? 'text-muted-foreground' : ''}>
-                      <ThumbsUp className="mr-1 h-4 w-4" />
-                      <span>{currentMeme.voteCount}</span>
-                    </Button>
+                  <CardContent className="p-0">
+                    <Link to={`/meme/${meme.id}`}>
+                      <div className="relative">
+                        <img 
+                          src={meme.imageUrl} 
+                          alt={meme.title}
+                          className="w-full max-h-[70vh] object-contain mx-auto"
+                        />
+                      </div>
+                    </Link>
+                    
+                    <div className="p-4">
+                      <h3 className="text-xl font-bold">{meme.title}</h3>
+                    </div>
+                  </CardContent>
+                  
+                  <CardFooter className="flex justify-between p-4 border-t">
+                    <div className="flex gap-4">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        disabled={!isAuthenticated} 
+                        className={!isAuthenticated ? 'text-muted-foreground' : ''}
+                        onClick={handleVote}
+                      >
+                        <ThumbsUp className="mr-1 h-4 w-4" />
+                        <span>{meme.voteCount}</span>
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <MessageSquare className="mr-1 h-4 w-4" />
+                        <span>{meme.stats?.comments}</span>
+                      </Button>
+                    </div>
                     <Button variant="ghost" size="sm">
-                      <MessageSquare className="mr-1 h-4 w-4" />
-                      <span>{currentMeme.stats?.comments}</span>
+                      <Share2 className="mr-1 h-4 w-4" />
+                      Share
                     </Button>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <Share2 className="mr-1 h-4 w-4" />
-                    Share
-                  </Button>
-                </CardFooter>
-              </Card>
+                  </CardFooter>
+                </Card>
+              ))}
               
               <div className="mt-8 text-center">
                 <Button 
