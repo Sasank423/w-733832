@@ -12,9 +12,9 @@ interface DraggableCaption {
   id: string;
   text: string;
   position: { x: number; y: number };
-  fontSize: number;
-  color: string;
-  fontFamily: string;
+  fontSize?: number;
+  color?: string;
+  fontFamily?: string;
 }
 
 // Define meme draft structure
@@ -22,11 +22,11 @@ export interface MemeDraft {
   id?: string;
   templateId?: string;
   imageUrl: string;
+  imageUrls?: string[];
   textCaptions: DraggableCaption[];
   textColor: string;
   fontSize: number;
   fontFamily: string;
-  alignment: 'left' | 'center' | 'right';
   textShadow: boolean;
   filter: {
     brightness: number;
@@ -38,18 +38,18 @@ export interface MemeDraft {
 
 const MemeCreationStudio = () => {
   // Use protected route hook to redirect if not authenticated
-  useProtectedRoute();
+  const { isAuthenticated } = useProtectedRoute({ allowGuest: true });
   const navigate = useNavigate();
   const { toast: shadowToast } = useToast();
 
   // Initialize meme state with default values
   const [meme, setMeme] = useState<MemeDraft>({
     imageUrl: '',
+    imageUrls: [],
     textCaptions: [],
     textColor: '#ffffff',
     fontSize: 32,
     fontFamily: 'Impact',
-    alignment: 'center',
     textShadow: true,
     filter: {
       brightness: 100,
@@ -60,7 +60,7 @@ const MemeCreationStudio = () => {
 
   // Auto-save functionality
   useEffect(() => {
-    if (meme.imageUrl) {
+    if (meme.imageUrls && meme.imageUrls.length > 0) {
       const autosaveTimer = setTimeout(() => {
         handleAutoSave();
       }, 30000); // Auto-save every 30 seconds
@@ -80,9 +80,6 @@ const MemeCreationStudio = () => {
       id: `caption-${Date.now()}`,
       text: 'New Caption',
       position: { x: 50, y: 50 }, // Center of the image
-      fontSize: meme.fontSize,
-      color: meme.textColor,
-      fontFamily: meme.fontFamily,
     };
 
     setMeme(prev => ({
@@ -118,6 +115,15 @@ const MemeCreationStudio = () => {
 
   // Save the meme draft with user confirmation
   const handleSaveDraft = () => {
+    if (!isAuthenticated) {
+      shadowToast({
+        title: 'Authentication required',
+        description: 'Please sign in to save drafts.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // In a real app, this would save to a backend
     localStorage.setItem('meme-draft', JSON.stringify({ ...meme, lastSaved: new Date() }));
     toast('Draft saved', {
@@ -127,8 +133,17 @@ const MemeCreationStudio = () => {
 
   // Publish the meme
   const handlePublish = () => {
+    if (!isAuthenticated) {
+      shadowToast({
+        title: 'Authentication required',
+        description: 'Please sign in to publish memes.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Validate that we have an image and at least some text
-    if (!meme.imageUrl) {
+    if (!meme.imageUrls || meme.imageUrls.length === 0) {
       shadowToast({
         title: 'Cannot publish',
         description: 'Please select or upload an image first.',

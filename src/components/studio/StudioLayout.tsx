@@ -7,7 +7,7 @@ import TemplateGallery from './TemplateGallery';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Upload, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, Upload, Eye } from 'lucide-react';
 
 interface StudioLayoutProps {
   meme: MemeDraft;
@@ -30,11 +30,30 @@ export const StudioLayout = ({
 }: StudioLayoutProps) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>("edit");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Update a specific caption property
   const handleCaptionUpdate = (id: string, updates: any) => {
     onUpdateCaption(id, updates);
   };
+
+  // Handle image navigation
+  const goToPreviousImage = () => {
+    if (meme.imageUrls?.length > 1) {
+      setCurrentImageIndex(prev => (prev === 0 ? meme.imageUrls.length - 1 : prev - 1));
+    }
+  };
+
+  const goToNextImage = () => {
+    if (meme.imageUrls?.length > 1) {
+      setCurrentImageIndex(prev => (prev === meme.imageUrls.length - 1 ? 0 : prev + 1));
+    }
+  };
+
+  // Get the current image URL
+  const currentImageUrl = meme.imageUrls && meme.imageUrls.length > 0 
+    ? meme.imageUrls[currentImageIndex] 
+    : '';
 
   if (isMobile) {
     return (
@@ -53,12 +72,24 @@ export const StudioLayout = ({
               onAddCaption={onAddCaption}
               onUpdateCaption={handleCaptionUpdate}
               onRemoveCaption={onRemoveCaption}
+              currentImageIndex={currentImageIndex}
             />
           </TabsContent>
           
           <TabsContent value="preview">
+            {meme.imageUrls && meme.imageUrls.length > 1 && (
+              <div className="flex justify-between items-center mb-4">
+                <Button variant="outline" size="icon" onClick={goToPreviousImage}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span>{currentImageIndex + 1} / {meme.imageUrls.length}</span>
+                <Button variant="outline" size="icon" onClick={goToNextImage}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
             <MemePreview 
-              meme={meme} 
+              meme={{...meme, imageUrl: currentImageUrl}} 
               onUpdateCaption={handleCaptionUpdate} 
             />
           </TabsContent>
@@ -66,7 +97,13 @@ export const StudioLayout = ({
           <TabsContent value="templates">
             <TemplateGallery 
               onTemplateSelect={(imageUrl) => {
-                onMemeUpdate({ imageUrl });
+                if (meme.imageUrls) {
+                  const newImageUrls = [...meme.imageUrls];
+                  newImageUrls[currentImageIndex] = imageUrl;
+                  onMemeUpdate({ imageUrls: newImageUrls });
+                } else {
+                  onMemeUpdate({ imageUrls: [imageUrl] });
+                }
                 setActiveTab("edit");
               }} 
             />
@@ -102,6 +139,7 @@ export const StudioLayout = ({
           onAddCaption={onAddCaption}
           onUpdateCaption={handleCaptionUpdate}
           onRemoveCaption={onRemoveCaption}
+          currentImageIndex={currentImageIndex}
         />
       </div>
 
@@ -109,8 +147,21 @@ export const StudioLayout = ({
       <div className="col-span-6">
         <div className="bg-muted p-4 rounded-lg">
           <h2 className="text-lg font-medium mb-4">Preview</h2>
+          
+          {meme.imageUrls && meme.imageUrls.length > 1 && (
+            <div className="flex justify-between items-center mb-4">
+              <Button variant="outline" size="icon" onClick={goToPreviousImage}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span>{currentImageIndex + 1} / {meme.imageUrls.length}</span>
+              <Button variant="outline" size="icon" onClick={goToNextImage}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          
           <MemePreview 
-            meme={meme} 
+            meme={{...meme, imageUrl: currentImageUrl}} 
             onUpdateCaption={handleCaptionUpdate}
           />
         </div>
@@ -135,7 +186,15 @@ export const StudioLayout = ({
       {/* Right panel: Template gallery */}
       <div className="col-span-3">
         <TemplateGallery 
-          onTemplateSelect={(imageUrl) => onMemeUpdate({ imageUrl })} 
+          onTemplateSelect={(imageUrl) => {
+            if (meme.imageUrls) {
+              const newImageUrls = [...meme.imageUrls];
+              newImageUrls[currentImageIndex] = imageUrl;
+              onMemeUpdate({ imageUrls: newImageUrls });
+            } else {
+              onMemeUpdate({ imageUrls: [imageUrl] });
+            }
+          }} 
         />
       </div>
     </div>

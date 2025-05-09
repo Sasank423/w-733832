@@ -58,6 +58,49 @@ const TEMPLATES = [
     name: 'Woman Yelling At Cat',
     imageUrl: 'https://i.imgflip.com/345v97.jpg',
     category: 'reactions'
+  },
+  // New templates
+  {
+    id: 'template9',
+    name: 'Disaster Girl',
+    imageUrl: 'https://i.imgflip.com/23ls.jpg',
+    category: 'evil'
+  },
+  {
+    id: 'template10',
+    name: 'Change My Mind',
+    imageUrl: 'https://i.imgflip.com/24y43o.jpg',
+    category: 'opinions'
+  },
+  {
+    id: 'template11',
+    name: 'Surprised Pikachu',
+    imageUrl: 'https://i.imgflip.com/2kbn1e.jpg',
+    category: 'reactions'
+  },
+  {
+    id: 'template12',
+    name: 'One Does Not Simply',
+    imageUrl: 'https://i.imgflip.com/1bij.jpg',
+    category: 'wisdom'
+  },
+  {
+    id: 'template13',
+    name: 'Unsettled Tom',
+    imageUrl: 'https://i.imgflip.com/2wifvo.jpg',
+    category: 'reactions'
+  },
+  {
+    id: 'template14',
+    name: 'Ancient Aliens',
+    imageUrl: 'https://i.imgflip.com/26am.jpg',
+    category: 'conspiracy'
+  },
+  {
+    id: 'template15',
+    name: 'Waiting Skeleton',
+    imageUrl: 'https://i.imgflip.com/2fm6x.jpg',
+    category: 'waiting'
   }
 ];
 

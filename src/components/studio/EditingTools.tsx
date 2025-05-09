@@ -20,14 +20,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { 
-  AlignLeft, 
-  AlignCenter, 
-  AlignRight,
   SlidersHorizontal,
   FileImage,
   Plus,
   Trash2,
-  Edit
+  Edit,
+  Images
 } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 
@@ -37,6 +35,7 @@ interface EditingToolsProps {
   onAddCaption: () => void;
   onUpdateCaption: (id: string, updates: any) => void;
   onRemoveCaption: (id: string) => void;
+  currentImageIndex?: number;
 }
 
 const FONT_OPTIONS = [
@@ -52,7 +51,14 @@ const FONT_OPTIONS = [
 const MAX_FILE_SIZE_MB = 5;
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 
-const EditingTools = ({ meme, onMemeUpdate, onAddCaption, onUpdateCaption, onRemoveCaption }: EditingToolsProps) => {
+const EditingTools = ({ 
+  meme, 
+  onMemeUpdate, 
+  onAddCaption, 
+  onUpdateCaption, 
+  onRemoveCaption,
+  currentImageIndex = 0
+}: EditingToolsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editingCaptionId, setEditingCaptionId] = useState<string | null>(null);
   
@@ -79,7 +85,32 @@ const EditingTools = ({ meme, onMemeUpdate, onAddCaption, onUpdateCaption, onRem
     
     // Create a URL for the file
     const imageUrl = URL.createObjectURL(file);
-    onMemeUpdate({ imageUrl });
+    
+    // Update the current image or add a new one
+    if (meme.imageUrls) {
+      const newImageUrls = [...meme.imageUrls];
+      if (currentImageIndex < newImageUrls.length) {
+        newImageUrls[currentImageIndex] = imageUrl;
+      } else {
+        newImageUrls.push(imageUrl);
+      }
+      onMemeUpdate({ imageUrls: newImageUrls });
+    } else {
+      onMemeUpdate({ imageUrls: [imageUrl] });
+    }
+  };
+
+  const addNewImage = () => {
+    if (!meme.imageUrls || meme.imageUrls.length === 0) {
+      toast('Please upload an image first', {
+        description: 'You need at least one image before adding more.',
+      });
+      return;
+    }
+    
+    // Add a placeholder for a new image
+    const newImageUrls = [...(meme.imageUrls || []), ''];
+    onMemeUpdate({ imageUrls: newImageUrls });
   };
 
   const triggerFileUpload = () => {
@@ -90,11 +121,33 @@ const EditingTools = ({ meme, onMemeUpdate, onAddCaption, onUpdateCaption, onRem
     onUpdateCaption(captionId, { text: value });
   };
 
+  const handleCaptionColorChange = (captionId: string, color: string) => {
+    onUpdateCaption(captionId, { color });
+  };
+
+  const handleCaptionFontSizeChange = (captionId: string, size: number) => {
+    onUpdateCaption(captionId, { fontSize: size });
+  };
+
+  const handleCaptionFontChange = (captionId: string, fontFamily: string) => {
+    onUpdateCaption(captionId, { fontFamily });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Image</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Images</CardTitle>
+            <Button 
+              size="icon" 
+              variant="outline" 
+              onClick={addNewImage} 
+              title="Add another image"
+            >
+              <Images className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -110,12 +163,21 @@ const EditingTools = ({ meme, onMemeUpdate, onAddCaption, onUpdateCaption, onRem
               variant="outline" 
               className="w-full"
             >
-              <FileImage className="mr-2 h-4 w-4" /> Upload Image
+              <FileImage className="mr-2 h-4 w-4" /> 
+              {meme.imageUrls && meme.imageUrls.length > 0 && meme.imageUrls[currentImageIndex] 
+                ? 'Change Image' 
+                : 'Upload Image'}
             </Button>
             
             <div className="text-xs text-muted-foreground">
               JPG, PNG, GIF formats. Max {MAX_FILE_SIZE_MB}MB.
             </div>
+            
+            {meme.imageUrls && meme.imageUrls.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Image {currentImageIndex + 1} of {meme.imageUrls.length}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -125,11 +187,12 @@ const EditingTools = ({ meme, onMemeUpdate, onAddCaption, onUpdateCaption, onRem
           <div className="flex items-center justify-between">
             <CardTitle>Text Captions</CardTitle>
             <Button 
-              size="sm" 
+              size="icon" 
               onClick={onAddCaption} 
               variant="outline"
+              title="Add Caption"
             >
-              <Plus className="h-4 w-4 mr-1" /> Add Caption
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
@@ -177,27 +240,88 @@ const EditingTools = ({ meme, onMemeUpdate, onAddCaption, onUpdateCaption, onRem
                     className="mb-2"
                   />
                   {editingCaptionId === caption.id && (
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <div>
-                        <Label className="text-xs">X: {caption.position.x.toFixed(0)}%</Label>
-                        <Slider
-                          min={0}
-                          max={100}
-                          step={1}
-                          value={[caption.position.x]}
-                          onValueChange={(value) => onUpdateCaption(caption.id, { position: { ...caption.position, x: value[0] } })}
-                          className="py-2"
-                        />
+                    <div className="space-y-3 mt-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">X: {caption.position.x.toFixed(0)}%</Label>
+                          <Slider
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={[caption.position.x]}
+                            onValueChange={(value) => onUpdateCaption(caption.id, { position: { ...caption.position, x: value[0] } })}
+                            className="py-2"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Y: {caption.position.y.toFixed(0)}%</Label>
+                          <Slider
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={[caption.position.y]}
+                            onValueChange={(value) => onUpdateCaption(caption.id, { position: { ...caption.position, y: value[0] } })}
+                            className="py-2"
+                          />
+                        </div>
                       </div>
+                      
                       <div>
-                        <Label className="text-xs">Y: {caption.position.y.toFixed(0)}%</Label>
+                        <Label htmlFor={`color-${caption.id}`}>Text Color</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            id={`color-${caption.id}`}
+                            type="color" 
+                            value={caption.color || meme.textColor}
+                            onChange={(e) => handleCaptionColorChange(caption.id, e.target.value)}
+                            className="w-12 h-10 p-1"
+                          />
+                          <Input 
+                            value={caption.color || meme.textColor}
+                            onChange={(e) => handleCaptionColorChange(caption.id, e.target.value)}
+                            className="flex-1"
+                            maxLength={7}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`font-${caption.id}`}>Font</Label>
+                        <Select 
+                          value={caption.fontFamily || meme.fontFamily} 
+                          onValueChange={(value) => handleCaptionFontChange(caption.id, value)}
+                        >
+                          <SelectTrigger id={`font-${caption.id}`}>
+                            <SelectValue placeholder="Select font" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FONT_OPTIONS.map((font) => (
+                              <SelectItem 
+                                key={font.value} 
+                                value={font.value}
+                                style={{ fontFamily: font.value }}
+                              >
+                                {font.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <Label htmlFor={`size-${caption.id}`}>
+                            Font Size: {caption.fontSize || meme.fontSize}px
+                          </Label>
+                        </div>
                         <Slider
-                          min={0}
-                          max={100}
+                          id={`size-${caption.id}`}
+                          min={16}
+                          max={72}
                           step={1}
-                          value={[caption.position.y]}
-                          onValueChange={(value) => onUpdateCaption(caption.id, { position: { ...caption.position, y: value[0] } })}
-                          className="py-2"
+                          value={[caption.fontSize || meme.fontSize]}
+                          onValueChange={(value) => handleCaptionFontSizeChange(caption.id, value[0])}
+                          className="py-4"
                         />
                       </div>
                     </div>
@@ -206,93 +330,6 @@ const EditingTools = ({ meme, onMemeUpdate, onAddCaption, onUpdateCaption, onRem
               ))}
             </div>
           )}
-          
-          <div>
-            <Label htmlFor="textColor">Text Color</Label>
-            <div className="flex gap-2">
-              <Input 
-                id="textColor"
-                type="color" 
-                value={meme.textColor}
-                onChange={(e) => onMemeUpdate({ textColor: e.target.value })}
-                className="w-12 h-10 p-1"
-              />
-              <Input 
-                value={meme.textColor}
-                onChange={(e) => onMemeUpdate({ textColor: e.target.value })}
-                className="flex-1"
-                maxLength={7}
-              />
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="fontFamily">Font</Label>
-            <Select 
-              value={meme.fontFamily} 
-              onValueChange={(value) => onMemeUpdate({ fontFamily: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select font" />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_OPTIONS.map((font) => (
-                  <SelectItem 
-                    key={font.value} 
-                    value={font.value}
-                    style={{ fontFamily: font.value }}
-                  >
-                    {font.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <div className="flex justify-between mb-2">
-              <Label htmlFor="fontSize">Font Size: {meme.fontSize}px</Label>
-            </div>
-            <Slider
-              id="fontSize"
-              min={16}
-              max={72}
-              step={1}
-              value={[meme.fontSize]}
-              onValueChange={(value) => onMemeUpdate({ fontSize: value[0] })}
-              className="py-4"
-            />
-          </div>
-          
-          <div>
-            <Label>Alignment</Label>
-            <div className="flex gap-2 mt-2">
-              <Button 
-                type="button"
-                variant={meme.alignment === 'left' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => onMemeUpdate({ alignment: 'left' })}
-              >
-                <AlignLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button"
-                variant={meme.alignment === 'center' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => onMemeUpdate({ alignment: 'center' })}
-              >
-                <AlignCenter className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button"
-                variant={meme.alignment === 'right' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => onMemeUpdate({ alignment: 'right' })}
-              >
-                <AlignRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
