@@ -82,7 +82,7 @@ const CreatorDashboard = () => {
   const { toast } = useToast();
   const [memes, setMemes] = useState(MOCK_USER_MEMES);
   const [drafts, setDrafts] = useState(MOCK_USER_DRAFTS);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("my-memes");
   const [statsLoading, setStatsLoading] = useState(false);
 
   // In a real app, you'd fetch the user's memes and stats
@@ -132,7 +132,7 @@ const CreatorDashboard = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <Button asChild variant="ghost" size="icon" className="mr-2">
-              <Link to="/dashboard">
+              <Link to="/">
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>

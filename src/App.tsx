@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import MemeCreationStudio from "./pages/MemeCreationStudio";
 import CreatorDashboard from "./pages/CreatorDashboard";
 import MemePage from "./pages/MemePage";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -28,8 +29,8 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/browse" element={<Index />} />
               <Route path="/create" element={<MemeCreationStudio />} />
-              <Route path="/dashboard" element={<Landing />} /> {/* Changed to Landing */}
               <Route path="/creator" element={<CreatorDashboard />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/settings" element={<ProfileSettings />} />
               <Route path="/meme/:id" element={<MemePage />} />
               <Route path="*" element={<NotFound />} />
